@@ -1,8 +1,7 @@
 <html>
 <head>
-	<!-- <script  src="https://code.jquery.com/jquery-3.1.1.min.js"integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="crossorigin="anonymous"></script> -->
-  <script src="jquery-1.11.3.js"></script>
-  <script src="graph.js"></script>
+	<script  src="https://code.jquery.com/jquery-3.1.1.min.js"integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="crossorigin="anonymous"></script>
+	<script src="graph.js"></script>
 </head>
 <body>
 <script>
@@ -53,8 +52,13 @@
 
 	var graphFactory = new GraphFactory();
 
-	var graph = graphFactory.createUndirectedWeightedGraph(map, edges);		
-		//graph.show();
+	var graph = graphFactory.createDirectedWeightedGraph(map, edges);
+		graph.show();
+		graph = graphFactory.createUndirectedGraph(map, edges);
+		graph.show();
+		graph = graphFactory.createDirectedGraph(map, edges);
+		graph.show(); 
+		graph = graphFactory.createUndirectedWeightedGraph(map, edges);		
 	
 	var start = 0;
 	var target = 10;
@@ -65,7 +69,7 @@
 		console.log("A* Search:")
 		console.log(searcher.aStarSearch(start, target, distance, distance));
 	
-	// [TEST] PriorityQueue
+	// [TEST]: PriorityQueue
 	var first = {"id": "first out"};
 	var second = {"id": "second out"};
 	var third = {"id": "third out"};
@@ -74,18 +78,7 @@
 	
 	var prioTest = new PriorityQueue();
 		prioTest.add(first, 1);
-		prioTest.add(second, 2);		
-	/*
-		prioTest.add(last, 10);
-		prioTest.add(stuff, 4);
-		prioTest.add(stuff, 7);
-		prioTest.add(stuff, 5);
-		prioTest.add(stuff, 6);
-		prioTest.add(stuff, 9);
-		prioTest.add(stuff, 8);
-		prioTest.add(third, 3);
-	*/	
-
+		prioTest.add(second, 2);
 </script>
 </body>
 </html>

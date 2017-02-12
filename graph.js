@@ -5,9 +5,9 @@
  */
 
 // REFACTOR: Remove?
-function Vertex (id, label) {
+function Vertex (id, label = id) {
 	this.id = id;
-    this.label = label || id;
+    this.label = label;
 }
 
 function Edge (from, to, weight = 1) {
@@ -17,48 +17,7 @@ function Edge (from, to, weight = 1) {
 }
 
 // REFACTOR: Encapsulate in GraphFactory
-function Graph (vertexList) {	
-	this.vertexList = vertexList;
-	this.vertices = vertexList.length;
-	
-    // REFACTOR: edges -> edgeCount, edgeList -> edges
-    this.edges = 0;
-	this.edgeList = [];
-    this.edgeWeights = [];
 
-	// initialise edgeList & edgeWeights
-	for (var i = 0; i < this.vertices; i++){
-        this.edgeList[i] = [];
-        this.edgeWeights[i] = [];
-    }
-		
-	this.addEdge = null;
-	this.show = null;
-    
-	this.getVertex = function getVertex (vertex) {
-		return this.vertexList[vertex];
-	}
-    this.getNeighbours = function getNeighbours (vertex) {
-        return this.edgeList[vertex];
-    }
-    this.getEdgeWeight = function getEdgeWeight (from, to) {
-		if (from == to) return 0;
-
-        var index = this.edgeList[from].indexOf(to);
-        return this.edgeWeights[from][index];
-    }
-    // REFACTOR: Remove Sugar?
-    this.getEdgeWeights = function getEdgeWeights (vertex) {
-        var neighbours = this.getNeighbours(vertex);
-        var edgeWeights = [];
-        
-        // TODO: Use neigbours.map() instead?
-        for (var i in neighbours)
-            edgeWeights.push(this.getEdgeWeight(vertex, neighbours[i]));
-        
-        return edgeWeights;
-    }
-}
 
 // REFACTOR: Make show and add functions private
 function GraphFactory () {
@@ -74,57 +33,99 @@ function GraphFactory () {
 
         return graph;
     }
-    this.createdUndirectedGraph = function createUndirectedGraph (vertexList, edges = []) {
-        var buildInstructions = new GraphBuildInstruction(vertexList, edges, this._connect, this._showUndirected);
+    this.createUndirectedGraph = function createUndirectedGraph (vertexList, edges = []) {
+        var buildInstructions = new GraphBuildInstruction(vertexList, edges, addUndirectedEdge, showUndirected);
 
         return this.createGraph(buildInstructions);
     }
     this.createUndirectedWeightedGraph = function createUndirectedWeightedGraph (vertexList, edges = []) {
-        var buildInstructions = new GraphBuildInstruction(vertexList, edges, this._connect, this._showUndirectedWeighted);
+        var buildInstructions = new GraphBuildInstruction(vertexList, edges, addUndirectedEdge, showUndirectedWeighted);
 
         return this.createGraph(buildInstructions);
     }
     this.createDirectedGraph = function createDirectedGraph (vertexList, edges = []) {
-       var buildInstructions = new GraphBuildInstruction(vertexList, edges, this.addDirectedEdge, this._showDirected);
+       var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirected);
 
        return this.createGraph(buildInstructions);
     }
     this.createDirectedWeightedGraph = function createDirectedWeightedGraph (vertexList, edges = []) {
-       var buildInstructions = new GraphBuildInstruction(vertexList, edges, this.addDirectedEdge, this._showDirectedWeighted);
+       var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirectedWeighted);
 
        return this.createGraph(buildInstructions);
     }
 
-    // REFACTOR: _connect -> addEdgeUndirected
-    this.addDirectedEdge = function addDirectedEdge (from, to, weight = 1) {
+    // REFACTOR: make private
+    function addDirectedEdge (from, to, weight = 1) {
         this.edgeList[from].push(to);
         this.edgeWeights[from].push(weight);
-		this.edges++;
+		this.edgeCount++;
     }
     // REFACTOR: remove code duplication. 
-    this._connect = function _connect (vertex1, vertex2, weight = 1) {
+    function addUndirectedEdge (vertex1, vertex2, weight = 1) {
         this.edgeList[vertex1].push(vertex2);
         this.edgeWeights[vertex1].push(weight);
 		this.edgeList[vertex2].push(vertex1);
         this.edgeWeights[vertex2].push(weight);
-        this.edges++;
+        this.edgeCount++;
     }
         
-    this._showDirected = function _showDirected () {
+    function showDirected () {
         for (var i = 0; i < this.vertices; i++)
         console.log(i + " -> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
     }
-    this._showDirectedWeighted = function _showDirectedWeighted () {
+    function showDirectedWeighted () {
         for (var i = 0; i < this.vertices; i++)
         console.log(i + " -" + this.edgeWeights[i] + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
     }
-    this._showUndirected = function _showUndirected () {
+    function showUndirected () {
         for (var i = 0; i < this.vertices; i++)
         console.log(i + " <-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
     }
-    this._showUndirectedWeighted = function _showUndirectedWeighted () {
+    function showUndirectedWeighted () {
         for (var i = 0; i < this.vertices; i++)
         console.log(i + " <-" + this.edgeWeights[i] + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
+    }
+
+    function Graph (vertexList) {	
+        this.vertexList = vertexList;
+        this.vertices = vertexList.length;
+        
+        this.edgeCount = 0;
+        this.edgeList = [];
+        this.edgeWeights = [];
+
+        // initialise edgeList & edgeWeights
+        for (var i = 0; i < this.vertices; i++){
+            this.edgeList[i] = [];
+            this.edgeWeights[i] = [];
+        }
+            
+        this.addEdge = null;
+        this.show = null;
+        
+        this.getVertex = function getVertex (vertex) {
+            return this.vertexList[vertex];
+        }
+        this.getNeighbours = function getNeighbours (vertex) {
+            return this.edgeList[vertex];
+        }
+        this.getEdgeWeight = function getEdgeWeight (from, to) {
+            if (from == to) return 0;
+
+            var index = this.edgeList[from].indexOf(to);
+            return this.edgeWeights[from][index];
+        }
+        // REFACTOR: Remove Sugar?
+        this.getEdgeWeights = function getEdgeWeights (vertex) {
+            var neighbours = this.getNeighbours(vertex);
+            var edgeWeights = [];
+            
+            // TODO: Use neigbours.map() instead? Better to use three column design for network analysis
+            for (var i in neighbours)
+                edgeWeights.push(this.getEdgeWeight(vertex, neighbours[i]));
+            
+            return edgeWeights;
+        }
     }
 
     function GraphBuildInstruction (vertexList, edges, addEdgeFunction, showFunction) {
@@ -150,6 +151,7 @@ function GraphSearcher (graph) {
 
     // TODO: Implement recursive and Iterative version?
     this.depthFirstSearch = function depthFirstSearch (start, target) {
+        var startTime = window.performance.now();
         var startNode = new SimpleSearchNode(start, null);
         
         var frontier = [startNode];
@@ -158,8 +160,10 @@ function GraphSearcher (graph) {
         while (frontier.length > 0) {
             var candidate = frontier.pop();
 
-            if (candidate.id === target)
+            if (candidate.id === target) {
+                console.log("DFS Elapsed Time:" + (window.performance.now() - startTime));
                 return retrievePathTo(candidate);
+            }
             
             explored[candidate.id] = true;
             var neighbours = graph.getNeighbours(candidate.id);
@@ -188,9 +192,9 @@ function GraphSearcher (graph) {
 	}*/
 	this.dfs = this.depthFirstSearch;
 	
+    // TODO: Adjust naming convention;
 	this.breadthFirstSearch = function breadthFirstSearch (start, target) {		
 		var explored = {};
-		this.visited[start] = true;
 		var queue = [start];
 		
 		while (queue.length > 0) {
@@ -201,9 +205,8 @@ function GraphSearcher (graph) {
 				neighbours.forEach(visitNeighbour, this);
 			
 			function visitNeighbour (neighbour) {
-				if (!this.visited[neighbour]) {
-					console.log("Visited Vertex" + neighbour);
-					this.visited[neighbour] = true;
+				if (!explored[neighbour]) {
+					explored[neighbour] = true;
 					queue.push(neighbour);
 				}
 			}
@@ -211,7 +214,8 @@ function GraphSearcher (graph) {
 	}
 	this.bfs = this.breadthFirstSearch;
 
-	this.aStarSearch = function aStarSearch (start, target, heuristicFunction, costFunction) {        
+	this.aStarSearch = function aStarSearch (start, target, heuristicFunction, costFunction) {    
+        var startTime = window.performance.now();    
         var heuristic = function (vertex) {
 			return heuristicFunction(graph.getVertex(vertex), graph.getVertex(target));
         }
@@ -228,8 +232,11 @@ function GraphSearcher (graph) {
         while (frontier.size() > 0) {        
             var candidate = frontier.poll();
 
-            if (isTarget(candidate))
-                return retrievePathTo(candidate);                
+            if (isTarget(candidate)){
+                console.log("A* Elapsed Time:" + (window.performance.now() - startTime));
+                return retrievePathTo(candidate);
+            }
+                                
             
             expandFrontier(candidate);
         }
@@ -280,8 +287,7 @@ function GraphSearcher (graph) {
     }
 }   
 
-
-// TODO: Change interface to match JS-Array access? add() -> push(), size() -> length, poll() -> pop()
+// TODO: Move to queue.js file
 function PriorityQueue () {
     var dataStore = [];
 
@@ -303,11 +309,8 @@ function PriorityQueue () {
         return dataStore.peek().data;    
     }
 
-    this.add = function add (data, priority) {
-        var node = new PriorityNode(data, priority);
-        var index = findInsertionIndex(node.priority);
-        
-        dataStore.splice(index, 0, node);      
+    this.add = function add (data, priority) {        
+        dataStore.splice(findInsertionIndex(priority), 0, new PriorityNode(data, priority));      
     }
 
     // TODO: make selection in Constructor for Min/Max PriorityQueue
