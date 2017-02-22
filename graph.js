@@ -4,7 +4,7 @@
  *      - performance decrease
  */
 
-// REFACTOR: Remove?
+// TODO: Remove?
 function Vertex (id, label = id) {
 	this.id = id;
     this.label = label;
@@ -16,10 +16,6 @@ function Edge (from, to, weight = 1) {
     this.weight = weight;
 }
 
-// REFACTOR: Encapsulate in GraphFactory
-
-
-// REFACTOR: Make show and add functions private
 function GraphFactory () {
 	this.createGraph = function (buildInstruction) {
         var graph = new Graph(buildInstruction.vertexList); 
@@ -54,13 +50,12 @@ function GraphFactory () {
        return this.createGraph(buildInstructions);
     }
 
-    // REFACTOR: make private
     function addDirectedEdge (from, to, weight = 1) {
         this.edgeList[from].push(to);
         this.edgeWeights[from].push(weight);
 		this.edgeCount++;
     }
-    // REFACTOR: remove code duplication. 
+ 
     function addUndirectedEdge (vertex1, vertex2, weight = 1) {
         this.edgeList[vertex1].push(vertex2);
         this.edgeWeights[vertex1].push(weight);
@@ -86,6 +81,7 @@ function GraphFactory () {
         console.log(i + " <-" + this.edgeWeights[i] + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
     }
 
+    // REFACTOR: Make properties private
     function Graph (vertexList) {	
         this.vertexList = vertexList;
         this.vertices = vertexList.length;
@@ -94,7 +90,7 @@ function GraphFactory () {
         this.edgeList = [];
         this.edgeWeights = [];
 
-        // initialise edgeList & edgeWeights
+        // Initialise edgeList & edgeWeights
         for (var i = 0; i < this.vertices; i++){
             this.edgeList[i] = [];
             this.edgeWeights[i] = [];
@@ -115,17 +111,6 @@ function GraphFactory () {
             var index = this.edgeList[from].indexOf(to);
             return this.edgeWeights[from][index];
         }
-        // REFACTOR: Remove Sugar?
-        this.getEdgeWeights = function getEdgeWeights (vertex) {
-            var neighbours = this.getNeighbours(vertex);
-            var edgeWeights = [];
-            
-            // TODO: Use neigbours.map() instead? Better to use three column design for network analysis
-            for (var i in neighbours)
-                edgeWeights.push(this.getEdgeWeight(vertex, neighbours[i]));
-            
-            return edgeWeights;
-        }
     }
 
     function GraphBuildInstruction (vertexList, edges, addEdgeFunction, showFunction) {
@@ -138,7 +123,7 @@ function GraphFactory () {
 
 /*
  * MAJOR TODO: Aggregate searches in CommandObjects, make GraphSearcher ActiveObject.
- *      Interface Search: nextCandidate, targetCheck, exploreCandidate, retrievePathTo
+ *      Interface Search: search, nextCandidate, targetCheck, exploreCandidate, retrievePathTo
  *      Interface GraphSearcher: run, add
  *      
  * MAJOR TODO: Create general Queue interface and Factory? -> Overkill, create Queue and overwrite interface
@@ -175,24 +160,9 @@ function GraphSearcher (graph) {
         }
         return [];
     }
-    /*
-    this.depthFirstSearch = function depthFirstSearch (start, target, alreadyExplored = {}) {
-        var explored = alreadyExplored;
-        explored[start] = true;
-        var neighbours = this.graph.getNeighbours(start);
-
-		for (var i in neighbours) {
-			var neighbour = neighbours[i];
-
-            if (neighbour == target)
-			
-			if (!explored[neighbour])
-				this.dfs(neighbour, target, explored);
-		}
-	}*/
 	this.dfs = this.depthFirstSearch;
 	
-    // TODO: Adjust naming convention;
+    // REFACTOR: queue : Array -> frontier : Queue.
 	this.breadthFirstSearch = function breadthFirstSearch (start, target) {		
 		var explored = {};
 		var queue = [start];
@@ -216,6 +186,7 @@ function GraphSearcher (graph) {
 
 	this.aStarSearch = function aStarSearch (start, target, heuristicFunction, costFunction) {    
         var startTime = window.performance.now();    
+        
         var heuristic = function (vertex) {
 			return heuristicFunction(graph.getVertex(vertex), graph.getVertex(target));
         }
@@ -247,12 +218,14 @@ function GraphSearcher (graph) {
             explored[searchNode.id] = true;
             
             var neighbours = graph.getNeighbours(searchNode.id);
-            for (var i in neighbours) {
-                if (!explored[neighbours[i]]) {
-                    var neighbourNode = new SearchNode(neighbours[i], searchNode);
+            
+            neighbours.forEach(function (neighbour) {
+                if (!explored[neighbour]) {
+                    var neighbourNode = new SearchNode(neighbour, searchNode);
                     frontier.add(neighbourNode, neighbourNode.estimatedCosts);
                 }
-            }
+            });
+            
         }
 
         function retrievePathTo (searchNode) {
@@ -313,11 +286,6 @@ function PriorityQueue () {
         dataStore.splice(findInsertionIndex(priority), 0, new PriorityNode(data, priority));      
     }
 
-    // TODO: make selection in Constructor for Min/Max PriorityQueue
-        // TODO: Implement in this way?
-        // var comparison = isMaxQueue ? currentValue < value : currentValue > value;
-
-    // Min first
     function findInsertionIndex(value) {
         if (dataStore.length === 0)
             return 0;
@@ -338,37 +306,115 @@ function PriorityQueue () {
 
         return minIndex;
     }
-    // max first
-    /*
-    function findInsertionIndex(value, priorityQueue) {
-        if (priorityQueue.dataStore.length == 0) {
-            console.log("Queue empty. Returning [0]")
-            return 0;
-        }
-        
-        var minIndex = 0;
-        var maxIndex = priorityQueue.dataStore.length;
-        var currentIndex = 0;
-        var currentValue = 0;
-
-        do {
-            currentIndex = Math.floor((minIndex + maxIndex) / 2);
-            currentValue = priorityQueue.dataStore[currentIndex].priority;
-
-            if (currentValue < value) {
-                minIndex = currentIndex + 1;
-            }
-            else {
-                maxIndex = currentIndex;
-            }
-        } while (minIndex < maxIndex);
-
-        return minIndex;
-    }
-    */
 
     function PriorityNode (data, priority) {
         this.data = data;
         this.priority = priority;
     }
 }
+
+function GraphSearch (queueConstructorFunction) {
+    this.search = function search (start, target, graph) {
+        // TODO: Abstract to any collection?
+        var frontier = new Queue (start);
+        var explored = {};
+
+        while (frontier.size() > 0) {
+            // TODO: Abstract to getNext()?
+            var candidate = frontier.poll();
+
+            if (isTarget(candidate))
+                return candidate.retrievePath();
+            
+            expandFrontier(candidate);
+        }
+        return candidate.retrievePath();
+    }
+
+    function isTarget (searchNode) {
+        return searchNode.id === target;
+    }
+
+    function expandFrontier (searchNode) {
+        explored[searchNode] = true;
+
+        var neighbours = graph.getNeighbours(searchNode.id);
+        for (var i in neighbours) {
+            if (!explored[neighbours[i]]) {
+                var neighbourNode = new SearchNode(neighbours[i], searchNode);
+                // TODO: Abstract to addToFrontier()? 
+                frontier.add(neighbourNode, neighbourNode.estimatedCosts);
+            }
+        }
+    }
+
+    // TODO: just pass a queue object in Constructor?
+    function Queue (initialValue = null) {
+        queueConstructorFunction.call(this);
+
+        if (initialValue !== null)
+            this.add(initialValue);
+    }
+
+    function SearchNode (vertexId, parentNode = null) {
+        this.id = vertexId;
+        this.parentNode = parentNode;
+
+        this.retrievePath = function retrievePath () {
+            if (this.parentNode == null)
+                return this.id;
+
+            return [this.id].concat(this.parentNode.retrievePath.call(this.parentNode));
+        }
+    }
+}
+
+
+/*
+Recursive Depth First Search
+this.depthFirstSearch = function depthFirstSearch (start, target, alreadyExplored = {}) {
+    var explored = alreadyExplored;
+    explored[start] = true;
+    var neighbours = this.graph.getNeighbours(start);
+
+    for (var i in neighbours) {
+        var neighbour = neighbours[i];
+
+        if (neighbour == target)
+        
+        if (!explored[neighbour])
+            this.dfs(neighbour, target, explored);
+    }
+}*/
+
+/* Max First
+function findInsertionIndex(value, priorityQueue) {
+    if (priorityQueue.dataStore.length == 0) {
+        console.log("Queue empty. Returning [0]")
+        return 0;
+    }
+    
+    var minIndex = 0;
+    var maxIndex = priorityQueue.dataStore.length;
+    var currentIndex = 0;
+    var currentValue = 0;
+
+    do {
+        currentIndex = Math.floor((minIndex + maxIndex) / 2);
+        currentValue = priorityQueue.dataStore[currentIndex].priority;
+
+        if (currentValue < value) {
+            minIndex = currentIndex + 1;
+        }
+        else {
+            maxIndex = currentIndex;
+        }
+    } while (minIndex < maxIndex);
+
+    return minIndex;
+}
+*/
+
+// TODO: make selection in Constructor for Min/Max PriorityQueue
+    // TODO: Implement in this way?
+    // var comparison = isMaxQueue ? currentValue < value : currentValue > value;
