@@ -149,20 +149,27 @@ function GraphSearcher (graph) {
 	this.dfs = this.depthFirstSearch;
 	
 	this.breadthFirstSearch = function breadthFirstSearch (start, target) {		
-		var explored = {};
-		var queue = [start];
+        var startTime = window.performance.now();
+        var explored = {};
+		var queue = [new SimpleSearchNode(start, null)];
 		
 		while (queue.length > 0) {
-			var vertex = queue.shift();
-            var neighbours = this.graph.getNeighbours(vertex);
-			
-			if (neighbours !== undefined) 				
-				neighbours.forEach(visitNeighbour);
+			var candidate = queue.shift();
+            var neighbours = this.graph.getNeighbours(candidate.id);
+            
+            if (neighbours !== undefined) {
+                if (neighbours.includes(target)) {
+                    console.log("BFS Elapsed Time:" + (window.performance.now() - startTime));
+                    return retrievePathTo(new SimpleSearchNode(target, candidate));
+                }
+                neighbours.forEach(visitNeighbour);
+            }
+                
         }
         function visitNeighbour (neighbour) {
             if (!explored[neighbour]) {
                 explored[neighbour] = true;
-                queue.push(neighbour);
+                queue.push(new SimpleSearchNode(neighbour, candidate));
             }
         }
 	}
