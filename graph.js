@@ -1,10 +1,3 @@
-/*
- * MAJOR TODO: Consider making Graph Objects reactive, using Observer Pattern? 
- *      + more robust
- *      - performance decrease
- */
-
-// TODO: Remove?
 function Vertex (id, label = id) {
 	this.id = id;
     this.label = label;
@@ -22,10 +15,10 @@ function GraphFactory () {
             graph.addEdge = buildInstruction.addEdgeFunction;
             graph.show = buildInstruction.showFunction;
 
-            buildInstruction.edges = buildInstruction.edges || [];
-            buildInstruction.edges.forEach(function addEdges(edge) {
-                graph.addEdge(edge.from, edge.to, edge.weight);
-            });
+        buildInstruction.edges = buildInstruction.edges || [];
+        buildInstruction.edges.forEach(function (edge) {
+            graph.addEdge(edge.from, edge.to, edge.weight);
+        });
 
         return graph;
     }
@@ -145,7 +138,7 @@ function GraphSearcher (graph) {
         while (frontier.length > 0) {
             var candidate = frontier.pop();
 
-            if (candidate.id === target) {
+            if (candidate.id == target) {
                 console.log("DFS Elapsed Time:" + (window.performance.now() - startTime));
                 return retrievePathTo(candidate);
             }
@@ -162,7 +155,6 @@ function GraphSearcher (graph) {
     }
 	this.dfs = this.depthFirstSearch;
 	
-    // REFACTOR: queue : Array -> frontier : Queue.
 	this.breadthFirstSearch = function breadthFirstSearch (start, target) {		
 		var explored = {};
 		var queue = [start];
@@ -207,8 +199,7 @@ function GraphSearcher (graph) {
                 console.log("A* Elapsed Time:" + (window.performance.now() - startTime));
                 return retrievePathTo(candidate);
             }
-                                
-            
+                                 
             expandFrontier(candidate);
         }
         console.log("No Path between nodes found. Returning closest path.");
@@ -248,7 +239,7 @@ function GraphSearcher (graph) {
 	}
 
     function retrievePathTo (searchNode) {
-        if (searchNode.parent == null) 
+        if (searchNode.parent === null) 
             return [searchNode.id];
         else
             return [searchNode.id].concat(retrievePathTo(searchNode.parent));
@@ -260,7 +251,6 @@ function GraphSearcher (graph) {
     }
 }   
 
-// TODO: Move to queue.js file
 function PriorityQueue () {
     var dataStore = [];
 
@@ -269,19 +259,19 @@ function PriorityQueue () {
     }
 
     this.poll = function poll () {
-        if(this.size() === 0) 
+        if (this.size() === 0) 
             return null;
 
         return dataStore.pop().data;
     }
 
     this.peek = function peek () {
-        if(this.size() === 0)
+        if (this.size() === 0)
             return null;
 
         return dataStore.peek().data;    
     }
-
+    
     this.add = function add (data, priority) {        
         dataStore.splice(findInsertionIndex(priority), 0, new PriorityNode(data, priority));      
     }
@@ -312,109 +302,3 @@ function PriorityQueue () {
         this.priority = priority;
     }
 }
-
-function GraphSearch (queueConstructorFunction) {
-    this.search = function search (start, target, graph) {
-        // TODO: Abstract to any collection?
-        var frontier = new Queue (start);
-        var explored = {};
-
-        while (frontier.size() > 0) {
-            // TODO: Abstract to getNext()?
-            var candidate = frontier.poll();
-
-            if (isTarget(candidate))
-                return candidate.retrievePath();
-            
-            expandFrontier(candidate);
-        }
-        return candidate.retrievePath();
-    }
-
-    function isTarget (searchNode) {
-        return searchNode.id === target;
-    }
-
-    function expandFrontier (searchNode) {
-        explored[searchNode] = true;
-
-        var neighbours = graph.getNeighbours(searchNode.id);
-        for (var i in neighbours) {
-            if (!explored[neighbours[i]]) {
-                var neighbourNode = new SearchNode(neighbours[i], searchNode);
-                // TODO: Abstract to addToFrontier()? 
-                frontier.add(neighbourNode, neighbourNode.estimatedCosts);
-            }
-        }
-    }
-
-    // TODO: just pass a queue object in Constructor?
-    function Queue (initialValue = null) {
-        queueConstructorFunction.call(this);
-
-        if (initialValue !== null)
-            this.add(initialValue);
-    }
-
-    function SearchNode (vertexId, parentNode = null) {
-        this.id = vertexId;
-        this.parentNode = parentNode;
-
-        this.retrievePath = function retrievePath () {
-            if (this.parentNode == null)
-                return this.id;
-
-            return [this.id].concat(this.parentNode.retrievePath.call(this.parentNode));
-        }
-    }
-}
-
-
-/*
-Recursive Depth First Search
-this.depthFirstSearch = function depthFirstSearch (start, target, alreadyExplored = {}) {
-    var explored = alreadyExplored;
-    explored[start] = true;
-    var neighbours = this.graph.getNeighbours(start);
-
-    for (var i in neighbours) {
-        var neighbour = neighbours[i];
-
-        if (neighbour == target)
-        
-        if (!explored[neighbour])
-            this.dfs(neighbour, target, explored);
-    }
-}*/
-
-/* Max First
-function findInsertionIndex(value, priorityQueue) {
-    if (priorityQueue.dataStore.length == 0) {
-        console.log("Queue empty. Returning [0]")
-        return 0;
-    }
-    
-    var minIndex = 0;
-    var maxIndex = priorityQueue.dataStore.length;
-    var currentIndex = 0;
-    var currentValue = 0;
-
-    do {
-        currentIndex = Math.floor((minIndex + maxIndex) / 2);
-        currentValue = priorityQueue.dataStore[currentIndex].priority;
-
-        if (currentValue < value) {
-            minIndex = currentIndex + 1;
-        }
-        else {
-            maxIndex = currentIndex;
-        }
-    } while (minIndex < maxIndex);
-
-    return minIndex;
-}
-*/
-
-// TODO: make selection in Constructor for Min/Max PriorityQueue
-    // TODO: Implement in this way?
-    // var comparison = isMaxQueue ? currentValue < value : currentValue > value;
