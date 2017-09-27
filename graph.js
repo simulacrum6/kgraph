@@ -2,11 +2,17 @@ function Vertex (id, label = id) {
 	this.id = id;
     this.label = label;
 }
+Vertex.prototype.toString = function () {
+    return '{id: ' + this.id + ', label: ' + this.label + '}'
+}
 
 function Edge (from, to, weight = 1) {
     this.from = from;
     this.to = to;
     this.weight = weight;
+}
+Edge.prototype.toString = function () {
+    return '{from: ' + this.from + ', to: ' + this.to + ', weight: ' + this.weight.toFixed(2) + '}'
 }
 
 function GraphFactory () {
@@ -63,7 +69,7 @@ function GraphFactory () {
     }
     function showDirectedWeighted () {
         for (var i = 0; i < this.vertices; i++)
-        console.log(i + " -" + this.edgeWeights[i] + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
+        console.log(i + " -" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
     }
     function showUndirected () {
         for (var i = 0; i < this.vertices; i++)
@@ -71,10 +77,9 @@ function GraphFactory () {
     }
     function showUndirectedWeighted () {
         for (var i = 0; i < this.vertices; i++)
-        console.log(i + " <-" + this.edgeWeights[i] + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
+        console.log(i + " <-" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
     }
 
-    // REFACTOR: Make properties private
     function Graph (vertexList) {	
         this.vertexList = vertexList;
         this.vertices = vertexList.length;
@@ -83,7 +88,6 @@ function GraphFactory () {
         this.edgeList = [];
         this.edgeWeights = [];
 
-        // Initialise edgeList & edgeWeights
         for (var i = 0; i < this.vertices; i++){
             this.edgeList[i] = [];
             this.edgeWeights[i] = [];
@@ -114,20 +118,9 @@ function GraphFactory () {
     }
 }
 
-/*
- * MAJOR TODO: Aggregate searches in CommandObjects, make GraphSearcher ActiveObject.
- *      Interface Search: search, nextCandidate, targetCheck, exploreCandidate, retrievePathTo
- *      Interface GraphSearcher: run, add
- *      
- * MAJOR TODO: Create general Queue interface and Factory? -> Overkill, create Queue and overwrite interface
- */ 
-// REFACTOR: Clean up code Duplication
-// TODO: Allow vertices as search inputs, not only vertexids
-// TODO: Rework SearchNode, 
 function GraphSearcher (graph) {
 	this.graph = graph;
 
-    // TODO: Implement recursive and Iterative version?
     this.depthFirstSearch = function depthFirstSearch (start, target) {
         var startTime = window.performance.now();
         var startNode = new SimpleSearchNode(start, null);
@@ -164,15 +157,14 @@ function GraphSearcher (graph) {
             var neighbours = this.graph.getNeighbours(vertex);
 			
 			if (neighbours !== undefined) 				
-				neighbours.forEach(visitNeighbour, this);
-			
-			function visitNeighbour (neighbour) {
-				if (!explored[neighbour]) {
-					explored[neighbour] = true;
-					queue.push(neighbour);
-				}
-			}
-		}
+				neighbours.forEach(visitNeighbour);
+        }
+        function visitNeighbour (neighbour) {
+            if (!explored[neighbour]) {
+                explored[neighbour] = true;
+                queue.push(neighbour);
+            }
+        }
 	}
 	this.bfs = this.breadthFirstSearch;
 
