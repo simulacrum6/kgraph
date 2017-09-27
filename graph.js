@@ -96,6 +96,18 @@ function GraphFactory () {
         this.addEdge = null;
         this.show = null;
         
+        this.contains = function contains (vertex) {
+            if (typeof vertex === 'number')
+                return this.vertexList[vertex] ? true : false
+            if (vertex instanceof Array)
+                return this.contains_all(vertex)
+            return false
+        }
+
+        this.contains_all = function containsAll (vertices) {
+            return vertices.every(vertex => this.contains(vertex))
+        }
+
         this.getVertex = function getVertex (vertex) {
             return this.vertexList[vertex];
         }
@@ -166,6 +178,9 @@ function GraphSearcher (graph) {
             }
                 
         }
+        
+        return []
+
         function visitNeighbour (neighbour) {
             if (!explored[neighbour]) {
                 explored[neighbour] = true;
@@ -174,6 +189,7 @@ function GraphSearcher (graph) {
         }
 	}
 	this.bfs = this.breadthFirstSearch;
+    this.getPath = this.breadthFirstSearch;
 
 	this.aStarSearch = function aStarSearch (start, target, heuristicFunction, costFunction) {    
         var startTime = window.performance.now();    

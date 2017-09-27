@@ -77,6 +77,16 @@
         graph = graphFactory.createUndirectedWeightedGraph(vertices, edges);
         graph.show()	
     console.log('--------------')
+
+    console.log('--------------')
+    console.log('GRAPH FUNCTIONS')
+    console.log('contains')
+    console.log(graph.contains(1337))
+    console.log(graph.contains(1))
+    console.log(graph.contains_all([0,1,9]))
+    console.log(graph.contains_all([1337,0,1,9]))
+    console.log(graph.contains([0,1,2]))
+    console.log('--------------')
     
     
     // [TEST]: GraphSearcher
