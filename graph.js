@@ -1,12 +1,12 @@
-function Vertex (id, label = id) {
-	this.id = id;
+function Vertex(id, label = id) {
+    this.id = id;
     this.label = label;
 }
 Vertex.prototype.toString = function () {
     return '{id: ' + this.id + ', label: ' + this.label + '}'
 }
 
-function Edge (from, to, weight = 1) {
+function Edge(from, to, weight = 1) {
     this.from = from;
     this.to = to;
     this.weight = weight;
@@ -15,11 +15,11 @@ Edge.prototype.toString = function () {
     return '{from: ' + this.from + ', to: ' + this.to + ', weight: ' + this.weight.toFixed(2) + '}'
 }
 
-function GraphFactory () {
-	this.createGraph = function (buildInstruction) {
-        var graph = new Graph(buildInstruction.vertexList); 
-            graph.addEdge = buildInstruction.addEdgeFunction;
-            graph.show = buildInstruction.showFunction;
+function GraphFactory() {
+    this.createGraph = function (buildInstruction) {
+        var graph = new Graph(buildInstruction.vertexList);
+        graph.addEdge = buildInstruction.addEdgeFunction;
+        graph.show = buildInstruction.showFunction;
 
         buildInstruction.edges = buildInstruction.edges || [];
         buildInstruction.edges.forEach(function (edge) {
@@ -28,75 +28,75 @@ function GraphFactory () {
 
         return graph;
     }
-    this.createUndirectedGraph = function createUndirectedGraph (vertexList, edges = []) {
+    this.createUndirectedGraph = function createUndirectedGraph(vertexList, edges = []) {
         var buildInstructions = new GraphBuildInstruction(vertexList, edges, addUndirectedEdge, showUndirected);
 
         return this.createGraph(buildInstructions);
     }
-    this.createUndirectedWeightedGraph = function createUndirectedWeightedGraph (vertexList, edges = []) {
+    this.createUndirectedWeightedGraph = function createUndirectedWeightedGraph(vertexList, edges = []) {
         var buildInstructions = new GraphBuildInstruction(vertexList, edges, addUndirectedEdge, showUndirectedWeighted);
 
         return this.createGraph(buildInstructions);
     }
-    this.createDirectedGraph = function createDirectedGraph (vertexList, edges = []) {
-       var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirected);
+    this.createDirectedGraph = function createDirectedGraph(vertexList, edges = []) {
+        var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirected);
 
-       return this.createGraph(buildInstructions);
+        return this.createGraph(buildInstructions);
     }
-    this.createDirectedWeightedGraph = function createDirectedWeightedGraph (vertexList, edges = []) {
-       var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirectedWeighted);
+    this.createDirectedWeightedGraph = function createDirectedWeightedGraph(vertexList, edges = []) {
+        var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirectedWeighted);
 
-       return this.createGraph(buildInstructions);
+        return this.createGraph(buildInstructions);
     }
 
-    function addDirectedEdge (from, to, weight = 1) {
+    function addDirectedEdge(from, to, weight = 1) {
         this.edgeList[from].push(to);
         this.edgeWeights[from].push(weight);
-		this.edgeCount++;
+        this.edgeCount++;
     }
- 
-    function addUndirectedEdge (vertex1, vertex2, weight = 1) {
+
+    function addUndirectedEdge(vertex1, vertex2, weight = 1) {
         this.edgeList[vertex1].push(vertex2);
         this.edgeWeights[vertex1].push(weight);
-		this.edgeList[vertex2].push(vertex1);
+        this.edgeList[vertex2].push(vertex1);
         this.edgeWeights[vertex2].push(weight);
         this.edgeCount++;
     }
-        
-    function showDirected () {
+
+    function showDirected() {
         for (var i = 0; i < this.vertices; i++)
-        console.log(i + " -> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
+            console.log(i + " -> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
     }
-    function showDirectedWeighted () {
+    function showDirectedWeighted() {
         for (var i = 0; i < this.vertices; i++)
-        console.log(i + " -" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
+            console.log(i + " -" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
     }
-    function showUndirected () {
+    function showUndirected() {
         for (var i = 0; i < this.vertices; i++)
-        console.log(i + " <-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
+            console.log(i + " <-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
     }
-    function showUndirectedWeighted () {
+    function showUndirectedWeighted() {
         for (var i = 0; i < this.vertices; i++)
-        console.log(i + " <-" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]" );
+            console.log(i + " <-" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
     }
 
-    function Graph (vertexList) {	
+    function Graph(vertexList) {
         this.vertexList = vertexList;
         this.vertices = vertexList.length;
-        
+
         this.edgeCount = 0;
         this.edgeList = [];
         this.edgeWeights = [];
 
-        for (var i = 0; i < this.vertices; i++){
+        for (var i = 0; i < this.vertices; i++) {
             this.edgeList[i] = [];
             this.edgeWeights[i] = [];
         }
-            
+
         this.addEdge = null;
         this.show = null;
-        
-        this.contains = function contains (vertex) {
+
+        this.contains = function contains(vertex) {
             if (typeof vertex === 'number')
                 return this.vertexList[vertex] ? true : false
             if (vertex instanceof Array)
@@ -104,17 +104,17 @@ function GraphFactory () {
             return false
         }
 
-        this.contains_all = function containsAll (vertices) {
+        this.contains_all = function containsAll(vertices) {
             return vertices.every(vertex => this.contains(vertex))
         }
 
-        this.getVertex = function getVertex (vertex) {
+        this.getVertex = function getVertex(vertex) {
             return this.vertexList[vertex];
         }
-        this.getNeighbours = function getNeighbours (vertex) {
+        this.getNeighbours = function getNeighbours(vertex) {
             return this.edgeList[vertex];
         }
-        this.getEdgeWeight = function getEdgeWeight (from, to) {
+        this.getEdgeWeight = function getEdgeWeight(from, to) {
             if (from == to) return 0;
 
             var index = this.edgeList[from].indexOf(to);
@@ -122,21 +122,21 @@ function GraphFactory () {
         }
     }
 
-    function GraphBuildInstruction (vertexList, edges, addEdgeFunction, showFunction) {
+    function GraphBuildInstruction(vertexList, edges, addEdgeFunction, showFunction) {
         this.vertexList = vertexList;
         this.addEdgeFunction = addEdgeFunction;
         this.showFunction = showFunction;
-        this.edges = edges;        
+        this.edges = edges;
     }
 }
 
-function GraphSearcher (graph) {
-	this.graph = graph;
+function GraphSearcher(graph) {
+    this.graph = graph;
 
-    this.depthFirstSearch = function depthFirstSearch (start, target) {
+    this.depthFirstSearch = function depthFirstSearch(start, target) {
         var startTime = window.performance.now();
         var startNode = new SimpleSearchNode(start, null);
-        
+
         var frontier = [startNode];
         var explored = {};
 
@@ -147,7 +147,7 @@ function GraphSearcher (graph) {
                 console.log("DFS Elapsed Time:" + (window.performance.now() - startTime));
                 return retrievePathTo(candidate);
             }
-            
+
             explored[candidate.id] = true;
             var neighbours = graph.getNeighbours(candidate.id);
 
@@ -158,17 +158,17 @@ function GraphSearcher (graph) {
         }
         return [];
     }
-	this.dfs = this.depthFirstSearch;
-	
-	this.breadthFirstSearch = function breadthFirstSearch (start, target) {		
+    this.dfs = this.depthFirstSearch;
+
+    this.breadthFirstSearch = function breadthFirstSearch(start, target) {
         var startTime = window.performance.now();
         var explored = {};
-		var queue = [new SimpleSearchNode(start, null)];
-		
-		while (queue.length > 0) {
-			var candidate = queue.shift();
+        var queue = [new SimpleSearchNode(start, null)];
+
+        while (queue.length > 0) {
+            var candidate = queue.shift();
             var neighbours = this.graph.getNeighbours(candidate.id);
-            
+
             if (neighbours !== undefined) {
                 if (neighbours.includes(target)) {
                     console.log("BFS Elapsed Time:" + (window.performance.now() - startTime));
@@ -176,66 +176,66 @@ function GraphSearcher (graph) {
                 }
                 neighbours.forEach(visitNeighbour);
             }
-                
+
         }
-        
+
         return []
 
-        function visitNeighbour (neighbour) {
+        function visitNeighbour(neighbour) {
             if (!explored[neighbour]) {
                 explored[neighbour] = true;
                 queue.push(new SimpleSearchNode(neighbour, candidate));
             }
         }
-	}
-	this.bfs = this.breadthFirstSearch;
-    this.getPath = this.breadthFirstSearch;
+    }
+    this.bfs = this.breadthFirstSearch;
+    this.getPath = this.breadthFirstSearch
 
-	this.aStarSearch = function aStarSearch (start, target, heuristicFunction, costFunction) {    
-        var startTime = window.performance.now();    
-        
+    this.aStarSearch = function aStarSearch(start, target, heuristicFunction, costFunction) {
+        var startTime = window.performance.now();
+
         var heuristic = function (vertex) {
-			return heuristicFunction(graph.getVertex(vertex), graph.getVertex(target));
+            return heuristicFunction(graph.getVertex(vertex), graph.getVertex(target));
         }
         var costs = function (vertex, anotherVertex) {
             return costFunction(graph.getVertex(vertex), graph.getVertex(anotherVertex));
         }
-        
+
         var frontier = new PriorityQueue();
         var explored = {};
         var startNode = new SearchNode(start, null);
-        
+
         frontier.add(startNode, startNode.estimatedCosts);
 
-        while (frontier.size() > 0) {        
+        while (frontier.size() > 0) {
             var candidate = frontier.poll();
 
-            if (isTarget(candidate)){
+            if (isTarget(candidate)) {
                 console.log("A* Elapsed Time:" + (window.performance.now() - startTime));
                 return retrievePathTo(candidate);
             }
-                                 
+
             expandFrontier(candidate);
         }
         console.log("No Path between nodes found. Returning closest path.");
         return retrievePathTo(candidate);
 
-        function expandFrontier (searchNode) {
+        function expandFrontier(searchNode) {
             explored[searchNode.id] = true;
-            
+
             var neighbours = graph.getNeighbours(searchNode.id);
-            
+
             neighbours.forEach(function (neighbour) {
                 if (!explored[neighbour]) {
                     var neighbourNode = new SearchNode(neighbour, searchNode);
                     frontier.add(neighbourNode, neighbourNode.estimatedCosts);
                 }
             });
-            
+
         }
 
-        function retrievePathTo (searchNode) {
-            if (searchNode.parent == null) 
+        function retrievePathTo(searchNode) {
+            if (searchNode.parent == null)
                 return [searchNode.id];
             else
                 return [searchNode.id].concat(retrievePathTo(searchNode.parent));
@@ -245,59 +245,59 @@ function GraphSearcher (graph) {
             return searchNode.id == target;
         }
 
-        function SearchNode (vertex, parent) {
+        function SearchNode(vertex, parent) {
             this.id = vertex;
             this.parent = parent;
             this.costs = (parent !== null) ? costs(parent.id, vertex) + parent.costs : 0;
             this.estimatedCosts = heuristic(vertex) + this.costs;
         }
-	}
+    }
 
-    function retrievePathTo (searchNode) {
-        if (searchNode.parent === null) 
+    function retrievePathTo(searchNode) {
+        if (searchNode.parent === null)
             return [searchNode.id];
         else
             return [searchNode.id].concat(retrievePathTo(searchNode.parent));
     }
 
-    function SimpleSearchNode (vertex, parentNode) {
+    function SimpleSearchNode(vertex, parentNode) {
         this.id = vertex;
         this.parent = parentNode;
     }
-}   
+}
 
-function PriorityQueue () {
+function PriorityQueue() {
     var dataStore = [];
 
-    this.size = function size () {
+    this.size = function size() {
         return dataStore.length;
     }
 
-    this.poll = function poll () {
-        if (this.size() === 0) 
+    this.poll = function poll() {
+        if (this.size() === 0)
             return null;
 
         return dataStore.pop().data;
     }
 
-    this.peek = function peek () {
+    this.peek = function peek() {
         if (this.size() === 0)
             return null;
 
-        return dataStore.peek().data;    
+        return dataStore.peek().data;
     }
-    
-    this.add = function add (data, priority) {        
-        dataStore.splice(findInsertionIndex(priority), 0, new PriorityNode(data, priority));      
+
+    this.add = function add(data, priority) {
+        dataStore.splice(findInsertionIndex(priority), 0, new PriorityNode(data, priority));
     }
 
     function findInsertionIndex(value) {
         if (dataStore.length === 0)
             return 0;
-        
+
         var minIndex = 0;
         var maxIndex = dataStore.length;
-        
+
         do {
             var currentIndex = Math.floor((minIndex + maxIndex) / 2);
             var currentValue = dataStore[currentIndex].priority;
@@ -306,13 +306,13 @@ function PriorityQueue () {
                 minIndex = currentIndex + 1;
             else
                 maxIndex = currentIndex;
-        
+
         } while (minIndex < maxIndex);
 
         return minIndex;
     }
 
-    function PriorityNode (data, priority) {
+    function PriorityNode(data, priority) {
         this.data = data;
         this.priority = priority;
     }
