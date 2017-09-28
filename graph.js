@@ -189,7 +189,15 @@ function GraphSearcher(graph) {
         }
     }
     this.bfs = this.breadthFirstSearch;
-    this.getPath = this.breadthFirstSearch
+    
+    this.getPath = function getPath(start, target, directed) {
+        directed = directed === undefined ? true : directed;
+        var path = this.bfs(start, target)
+        if (path.length === 0 && directed === false) {
+            path = this.bfs(target, start)
+        }
+        return path;
+    }
 
     this.aStarSearch = function aStarSearch(start, target, heuristicFunction, costFunction) {
         var startTime = window.performance.now();
