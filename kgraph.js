@@ -1,23 +1,34 @@
 (function (kgraph, $, undefined) {
-    kgraph.Vertex = function Vertex(id, label = id) {
-        this.id = id;
-        this.label = label;
-    }
-    kgraph.Vertex.prototype.toString = function () {
-        return '{id: ' + this.id + ', label: ' + this.label + '}'
-    }
+    var Vertex = (function (){
+        function Vertex(id, label = id) {
+            this.id = id
+            this.label = label
+        }
+        
+        Vertex.prototype.toString = function () {
+            return '{id: ' + this.id + ', label: ' + this.label + '}'
+        }
+        
+        return Vertex
+    })()
 
-    kgraph.Edge = function (from, to, weight = 1) {
-        this.from = from;
-        this.to = to;
-        this.weight = weight;
-    }
-    kgraph.Edge.prototype.toString = function () {
-        return '{from: ' + this.from + ', to: ' + this.to + ', weight: ' + this.weight.toFixed(2) + '}'
-    }
+    var Edge = (function (){
+        function Edge(from, to, weight = 1) {
+            this.from = from;
+            this.to = to;
+            this.weight = weight;
+        }
+        Edge.prototype.toString = function () {
+            return '{from: ' + this.from + ', to: ' + this.to + ', weight: ' + this.weight.toFixed(2) + '}'
+        }
     
-    kgraph.GraphFactory = function GraphFactory() {
-        this.createGraph = function (buildInstruction) {
+        return Edge
+    })()
+
+    var GraphFactory = (function () {
+        function GraphFactory() {}
+        
+        GraphFactory.prototype.createGraph = function (buildInstruction) {
             var graph = new Graph(buildInstruction.vertexList);
             graph.addEdge = buildInstruction.addEdgeFunction;
             graph.show = buildInstruction.showFunction;
@@ -28,23 +39,68 @@
             });
             return graph;
         }
-        this.createUndirectedGraph = function createUndirectedGraph(vertexList, edges = []) {
+        GraphFactory.prototype.createUndirectedGraph = function (vertexList, edges = []) {
             var buildInstructions = new GraphBuildInstruction(vertexList, edges, addUndirectedEdge, showUndirected);
             return this.createGraph(buildInstructions);
         }
-        this.createUndirectedWeightedGraph = function createUndirectedWeightedGraph(vertexList, edges = []) {
+        GraphFactory.prototype.createUndirectedWeightedGraph = function (vertexList, edges = []) {
             var buildInstructions = new GraphBuildInstruction(vertexList, edges, addUndirectedEdge, showUndirectedWeighted);
 
             return this.createGraph(buildInstructions);
         }
-        this.createDirectedGraph = function createDirectedGraph(vertexList, edges = []) {
+        GraphFactory.prototype.createDirectedGraph = function (vertexList, edges = []) {
             var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirected);
 
             return this.createGraph(buildInstructions);
         }
-        this.createDirectedWeightedGraph = function createDirectedWeightedGraph(vertexList, edges = []) {
+        GraphFactory.prototype.createDirectedWeightedGraph = function (vertexList, edges = []) {
             var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirectedWeighted);
             return this.createGraph(buildInstructions);
+        }
+
+        function GraphBuildInstruction(vertexList, edges, addEdgeFunction, showFunction) {
+            this.vertexList = vertexList;
+            this.addEdgeFunction = addEdgeFunction;
+            this.showFunction = showFunction;
+            this.edges = edges;
+        }
+
+        function Graph(vertexList) {
+            this.vertexList = vertexList;
+            this.vertices = vertexList.length;
+            this.edgeCount = 0;
+            this.edgeList = [];
+            this.edgeWeights = [];
+
+            for (var i = 0; i < this.vertices; i++) {
+                this.edgeList[i] = [];
+                this.edgeWeights[i] = [];
+            }
+
+            this.addEdge = function(){};
+            this.show = function(){};
+        }
+
+        Graph.prototype.contains = function contains(vertex) {
+            if (typeof vertex === 'number')
+                return this.vertexList[vertex] ? true : false
+            if (vertex instanceof Array)
+                return this.containsAll(vertex)
+            return false
+        }
+        Graph.prototype.containsAll = function containsAll(vertices) {
+            return vertices.every(vertex => this.contains(vertex))
+        }
+        Graph.prototype.getVertex = function getVertex(vertex) {
+            return this.vertexList[vertex];
+        }
+        Graph.prototype.getNeighbours = function getNeighbours(vertex) {
+            return this.edgeList[vertex];
+        }
+        Graph.prototype.getEdgeWeight = function getEdgeWeight(from, to) {
+            if (from == to) return 0;
+            var index = this.edgeList[from].indexOf(to);
+            return this.edgeWeights[from][index];
         }
 
         function addDirectedEdge(from, to, weight = 1) {
@@ -59,6 +115,7 @@
             this.edgeWeights[vertex2].push(weight);
             this.edgeCount++;
         }
+        
         function showDirected() {
             for (var i = 0; i < this.vertices; i++)
                 console.log(i + " -> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
@@ -76,54 +133,16 @@
                 console.log(i + " <-" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
         }
 
-        function Graph(vertexList) {
-            this.vertexList = vertexList;
-            this.vertices = vertexList.length;
-            this.edgeCount = 0;
-            this.edgeList = [];
-            this.edgeWeights = [];
+        return GraphFactory
+    })()
 
-            for (var i = 0; i < this.vertices; i++) {
-                this.edgeList[i] = [];
-                this.edgeWeights[i] = [];
-            }
-
-            this.addEdge = function(){};
-            this.show = function(){};
-            this.contains = function contains(vertex) {
-                if (typeof vertex === 'number')
-                    return this.vertexList[vertex] ? true : false
-                if (vertex instanceof Array)
-                    return this.containsAll(vertex)
-                return false
-            }
-            this.containsAll = function containsAll(vertices) {
-                return vertices.every(vertex => this.contains(vertex))
-            }
-            this.getVertex = function getVertex(vertex) {
-                return this.vertexList[vertex];
-            }
-            this.getNeighbours = function getNeighbours(vertex) {
-                return this.edgeList[vertex];
-            }
-            this.getEdgeWeight = function getEdgeWeight(from, to) {
-                if (from == to) return 0;
-                var index = this.edgeList[from].indexOf(to);
-                return this.edgeWeights[from][index];
-            }
+    
+    var GraphSearcher = (function () {
+        function GraphSearcher(graph) {
+            this.graph = graph;
         }
 
-        function GraphBuildInstruction(vertexList, edges, addEdgeFunction, showFunction) {
-            this.vertexList = vertexList;
-            this.addEdgeFunction = addEdgeFunction;
-            this.showFunction = showFunction;
-            this.edges = edges;
-        }
-    }
-    kgraph.GraphSearcher = function GraphSearcher(graph) {
-        this.graph = graph;
-
-        this.depthFirstSearch = function depthFirstSearch(start, target) {
+        GraphSearcher.prototype.depthFirstSearch = function depthFirstSearch(start, target) {
             var startTime = window.performance.now();
             var startNode = new SimpleSearchNode(start, null);
 
@@ -148,9 +167,8 @@
             }
             return [];
         }
-        this.dfs = this.depthFirstSearch;
-
-        this.breadthFirstSearch = function breadthFirstSearch(start, target) {
+        GraphSearcher.prototype.dfs = GraphSearcher.prototype.depthFirstSearch;
+        GraphSearcher.prototype.breadthFirstSearch = function breadthFirstSearch(start, target) {
             var startTime = window.performance.now();
             var explored = {};
             var queue = [new SimpleSearchNode(start, null)];
@@ -178,9 +196,8 @@
                 }
             }
         }
-        this.bfs = this.breadthFirstSearch;
-
-        this.getPath = function getPath(start, target, directed) {
+        GraphSearcher.prototype.bfs = GraphSearcher.prototype.breadthFirstSearch;
+        GraphSearcher.prototype.getPath = function getPath(start, target, directed) {
             directed = directed === undefined ? true : directed;
             var path = this.bfs(start, target)
             if (path.length === 0 && directed === false) {
@@ -188,8 +205,7 @@
             }
             return path;
         }
-
-        this.aStarSearch = function aStarSearch(start, target, heuristicFunction, costFunction) {
+        GraphSearcher.prototype.aStarSearch = function aStarSearch(start, target, heuristicFunction, costFunction) {
             var startTime = window.performance.now();
 
             var heuristic = function (vertex) {
@@ -250,7 +266,7 @@
                 this.estimatedCosts = heuristic(vertex) + this.costs;
             }
         }
-
+    
         function retrievePathTo(searchNode) {
             if (searchNode.parent === null)
                 return [searchNode.id];
@@ -314,6 +330,15 @@
                 this.priority = priority;
             }
         }
-    }
+
+    return GraphSearcher
+    })() 
+    
+
+    kgraph.Vertex = Vertex
+    kgraph.Edge = Edge
+    kgraph.GraphFactory = new GraphFactory()
+    kgraph.GraphSearcher = GraphSearcher
+
     return kgraph;
 })(window.kgraph = window.kgraph || {}, jQuery)
