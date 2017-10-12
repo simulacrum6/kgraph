@@ -65,19 +65,18 @@
         // [TEST]: kgraph.GraphFactory & Graph
         console.log('--------------')
         console.log('GRAPHFACTORY TEST')
-        var graphFactory = kgraph.GraphFactory
 
         console.log('directed graph:')
-        var graph = graphFactory.createDirectedGraph(vertices, edges);
+        var graph = kgraph.GraphFactory.createDirectedGraph(vertices, edges);
         graph.show();
         console.log('directed & weighted graph:')
-        graph = graphFactory.createDirectedWeightedGraph(vertices, edges);
+        graph = kgraph.GraphFactory.createDirectedWeightedGraph(vertices, edges);
         graph.show();
         console.log('undirected graph:')
-        graph = graphFactory.createUndirectedGraph(vertices, edges);
+        graph = kgraph.GraphFactory.createUndirectedGraph(vertices, edges);
         graph.show();
         console.log('undirected & weighted graph:')
-        graph = graphFactory.createUndirectedWeightedGraph(vertices, edges);
+        graph = kgraph.GraphFactory.createUndirectedWeightedGraph(vertices, edges);
         graph.show()
         console.log('--------------')
 
