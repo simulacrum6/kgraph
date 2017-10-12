@@ -1,5 +1,5 @@
 (function (kgraph, $, undefined) {
-    var Vertex = (function (){
+    var Vertex = (function () {
         class Vertex {
             constructor(id, label = id) {
                 this.id = id;
@@ -13,7 +13,7 @@
         return Vertex
     })()
 
-    var Edge = (function (){
+    var Edge = (function () {
         class Edge {
             constructor(from, to, weight = 1) {
                 this.from = from;
@@ -31,38 +31,38 @@
     var GraphFactory = (function () {
         class GraphFactory {
             constructor() { }
-            
+
             createGraph(buildInstruction) {
-                var graph = new Graph(buildInstruction.vertexList);
+                var graph = new Graph(buildInstruction.nodes);
                 graph.addEdge = buildInstruction.addEdgeFunction;
                 graph.show = buildInstruction.showFunction;
                 buildInstruction.edges = buildInstruction.edges || [];
-                buildInstruction.edges.forEach(function(edge) {
+                buildInstruction.edges.forEach(function (edge) {
                     graph.addEdge(edge.from, edge.to, edge.weight);
                 });
                 return graph;
             }
-            createUndirectedGraph(vertexList, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(vertexList, edges, addUndirectedEdge, showUndirected);
+            createUndirectedGraph(nodes, edges = []) {
+                var buildInstructions = new GraphBuildInstruction(nodes, edges, addUndirectedEdge, showUndirected);
                 return this.createGraph(buildInstructions);
             }
-            createUndirectedWeightedGraph(vertexList, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(vertexList, edges, addUndirectedEdge, showUndirectedWeighted);
+            createUndirectedWeightedGraph(nodes, edges = []) {
+                var buildInstructions = new GraphBuildInstruction(nodes, edges, addUndirectedEdge, showUndirectedWeighted);
                 return this.createGraph(buildInstructions);
             }
-            createDirectedGraph(vertexList, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirected);
+            createDirectedGraph(nodes, edges = []) {
+                var buildInstructions = new GraphBuildInstruction(nodes, edges, addDirectedEdge, showDirected);
                 return this.createGraph(buildInstructions);
             }
-            createDirectedWeightedGraph(vertexList, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(vertexList, edges, addDirectedEdge, showDirectedWeighted);
+            createDirectedWeightedGraph(nodes, edges = []) {
+                var buildInstructions = new GraphBuildInstruction(nodes, edges, addDirectedEdge, showDirectedWeighted);
                 return this.createGraph(buildInstructions);
             }
         }
 
         class GraphBuildInstruction {
-            constructor(vertexList, edges, addEdgeFunction, showFunction) {
-                this.vertexList = vertexList;
+            constructor(nodes, edges, addEdgeFunction, showFunction) {
+                this.nodes = nodes;
                 this.addEdgeFunction = addEdgeFunction;
                 this.showFunction = showFunction;
                 this.edges = edges;
@@ -70,35 +70,46 @@
         }
 
         class Graph {
-            constructor(vertexList) {
-                this.vertexList = vertexList;
-                this.vertices = vertexList.length;
+            constructor(nodes) {
+                this.nodes = nodes;
+                this.edges = []
+                this.nodeCount = nodes.length
                 this.edgeCount = 0;
                 this.edgeList = [];
                 this.edgeWeights = [];
-                for (var i = 0; i < this.vertices; i++) {
+                for (var i = 0; i < this.nodeCount; i++) {
                     this.edgeList[i] = [];
                     this.edgeWeights[i] = [];
                 }
-                this.addEdge = function() { };
-                this.show = function() { };
+                this.addEdge = function () { };
+                this.show = function () { };
             }
-            
-            contains(vertex) {
-                if (typeof vertex === 'number')
-                    return this.vertexList[vertex] ? true : false;
-                if (vertex instanceof Array)
-                    return this.containsAll(vertex);
+
+            contains(id) {
+                if (typeof id === 'number')
+                    return this.nodes[id] ? true : false;
+                if (id instanceof Array)
+                    return this.containsAll(id);
                 return false;
             }
-            containsAll(vertices) {
-                return vertices.every(vertex => this.contains(vertex));
+            containsAll(ids) {
+                return ids.every(id => this.contains(id));
             }
-            getVertex(vertex) {
-                return this.vertexList[vertex];
+            getVertex(id) {
+                return this.nodes[id];
             }
-            getNeighbours(vertex) {
-                return this.edgeList[vertex];
+            getNeighbours(id) {
+                return this.edgeList[id];
+            }
+            degree(id) {
+                return this.getNeighbours(id).length
+            }
+            averageDegree() {
+                // See 'Graph Theory' - Chapter 1 by Reinhard Diestel. http://diestel-graph-theory.com/ 
+                return 2*this.edgeCount/this.nodeCount
+            }
+            isIsolated(id) {
+                return this.degree(id) === 0
             }
             getEdgeWeight(from, to) {
                 if (from == to)
@@ -113,42 +124,67 @@
             this.edgeList[from].push(to);
             this.edgeWeights[from].push(weight);
             this.edgeCount++;
+            this.edges.push(new Edge(from, to, weight))
         }
-        function addUndirectedEdge(vertex1, vertex2, weight = 1) {
-            this.edgeList[vertex1].push(vertex2);
-            this.edgeWeights[vertex1].push(weight);
-            this.edgeList[vertex2].push(vertex1);
-            this.edgeWeights[vertex2].push(weight);
+        function addUndirectedEdge(from, to, weight = 1) {
+            this.edgeList[from].push(to);
+            this.edgeWeights[from].push(weight);
+            this.edgeList[to].push(from);
+            this.edgeWeights[to].push(weight);
             this.edgeCount++;
+            this.edges.push(new Edge(from, to, weight))
+            this.edges.push(new Edge(to, from, weight))
         }
-        
+
         function showDirected() {
-            for (var i = 0; i < this.vertices; i++)
+            for (var i = 0; i < this.nodeCount; i++)
                 console.log(i + " -> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
         }
         function showDirectedWeighted() {
-            for (var i = 0; i < this.vertices; i++)
+            for (var i = 0; i < this.nodeCount; i++)
                 console.log(i + " -" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
         }
         function showUndirected() {
-            for (var i = 0; i < this.vertices; i++)
+            for (var i = 0; i < this.nodeCount; i++)
                 console.log(i + " <-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
         }
         function showUndirectedWeighted() {
-            for (var i = 0; i < this.vertices; i++)
+            for (var i = 0; i < this.nodeCount; i++)
                 console.log(i + " <-" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
         }
 
         return GraphFactory
     })()
 
-    
+
     var GraphSearcher = (function () {
         class GraphSearcher {
             constructor(graph) {
                 this.graph = graph;
             }
-            
+            distance(start, target) {
+                var path = this.bfs(start, target)
+                if (path.length > 0)
+                    return path.length
+                return Infinity
+            }
+            pathLengths() {
+                var lengths = []
+                for (let i = 0; i < this.graph.edgeCount; i++){
+                    for (let j = 0; j < this.graph.edgeCount; j++) {
+                        var path = this.bfs(i,j)
+                        lengths.push(path.length)
+                    }
+                }
+                return lengths
+            }
+            diameter() {
+                var lengths = this.pathLengths()
+                return lengths.reduce((a,b) => Math.max(a,b), 0)
+            }
+            radius() {
+                
+            }
             depthFirstSearch(start, target) {
                 var startTime = window.performance.now();
                 var startNode = new SimpleSearchNode(start, null);
@@ -170,7 +206,9 @@
                 return [];
             }
             breadthFirstSearch(start, target) {
-                var startTime = window.performance.now();
+                if (start === target)
+                    return [start]
+                
                 var explored = {};
                 var queue = [new SimpleSearchNode(start, null)];
                 while (queue.length > 0) {
@@ -178,7 +216,6 @@
                     var neighbours = this.graph.getNeighbours(candidate.id);
                     if (neighbours !== undefined) {
                         if (neighbours.includes(target)) {
-                            console.log("BFS Elapsed Time:" + (window.performance.now() - startTime));
                             return retrievePathTo(new SimpleSearchNode(target, candidate));
                         }
                         neighbours.forEach(visitNeighbour);
@@ -202,10 +239,10 @@
             }
             aStarSearch(start, target, heuristicFunction, costFunction) {
                 var startTime = window.performance.now();
-                var heuristic = function(vertex) {
+                var heuristic = function (vertex) {
                     return heuristicFunction(graph.getVertex(vertex), graph.getVertex(target));
                 };
-                var costs = function(vertex, anotherVertex) {
+                var costs = function (vertex, anotherVertex) {
                     return costFunction(graph.getVertex(vertex), graph.getVertex(anotherVertex));
                 };
                 var frontier = new PriorityQueue();
@@ -221,13 +258,13 @@
                     expandFrontier(candidate);
                 }
                 console.log("No Path between nodes found. Returning closest path.");
-                
+
                 return retrievePathTo(candidate);
-                
+
                 function expandFrontier(searchNode) {
                     explored[searchNode.id] = true;
                     var neighbours = graph.getNeighbours(searchNode.id);
-                    neighbours.forEach(function(neighbour) {
+                    neighbours.forEach(function (neighbour) {
                         if (!explored[neighbour]) {
                             var neighbourNode = new SearchNode(neighbour, searchNode);
                             frontier.add(neighbourNode, neighbourNode.estimatedCosts);
@@ -254,7 +291,7 @@
 
         GraphSearcher.prototype.dfs = GraphSearcher.prototype.depthFirstSearch;
         GraphSearcher.prototype.bfs = GraphSearcher.prototype.breadthFirstSearch;
-    
+
         function retrievePathTo(searchNode) {
             if (searchNode.parent === null)
                 return [searchNode.id];
@@ -319,9 +356,13 @@
             }
         }
 
-    return GraphSearcher
-    })() 
-    
+        return GraphSearcher
+    })()
+
+    function isSubGraph(graph, anotherGraph) {
+    }
+    function isDisjoint(graph, anotherGraph) {
+    }
 
     kgraph.Vertex = Vertex
     kgraph.Edge = Edge

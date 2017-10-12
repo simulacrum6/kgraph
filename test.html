@@ -82,12 +82,22 @@
 
         console.log('--------------')
         console.log('GRAPH FUNCTIONS')
-        console.log('contains')
+        console.log('contains 1337 (false)')
         console.log(graph.contains(1337))
+        console.log('contains 1 (true)')
         console.log(graph.contains(1))
+        console.log('containsAll [0, 1, 9] (true)')
         console.log(graph.containsAll([0, 1, 9]))
+        console.log('containsAll [1337, 0, 1, 9] (false)')
         console.log(graph.containsAll([1337, 0, 1, 9]))
+        console.log('contains with list argument [0, 1, 2] (true)')
         console.log(graph.contains([0, 1, 2]))
+        console.log('isIsolated 12 (true)')
+        console.log(graph.isIsolated(12))
+        console.log('degree 7 (4)')
+        console.log(graph.degree(7))
+        console.log('averageDegree')
+        console.log(graph.averageDegree())
         console.log('--------------')
 
 
@@ -105,6 +115,10 @@
         console.log(searcher.aStarSearch(start, target, distance, distance));
         console.log('BreadthFirstSearch')
         console.log(searcher.bfs(start, target))
+        console.log('Distance')
+        console.log(searcher.distance(start,target))
+        console.log('Diameter')
+        console.log(searcher.diameter())
         console.log('--------------')
 
     </script>
