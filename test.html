@@ -108,17 +108,19 @@
         var target = 10;
         console.log('start: ' + start + '\n target: ' + target)
 
-        var searcher = new kgraph.GraphSearcher(graph);
+        var searcher = new kgraph.GraphSearcher(graph)
         console.log("DephtFirstSearch")
-        console.log(searcher.dfs(start, target));
+        console.log(searcher.dfs(start, target))
         console.log("A* Search")
-        console.log(searcher.aStarSearch(start, target, distance, distance));
+        console.log(searcher.aStarSearch(start, target, distance, distance))
         console.log('BreadthFirstSearch')
         console.log(searcher.bfs(start, target))
         console.log('Distance')
         console.log(searcher.distance(start,target))
         console.log('Diameter')
         console.log(searcher.diameter())
+        console.log('PathNeighbours')
+        console.log(searcher.getPathNeighbours())
         console.log('--------------')
 
     </script>

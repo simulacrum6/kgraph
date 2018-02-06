@@ -183,7 +183,7 @@
                 return lengths.reduce((a,b) => Math.max(a,b), 0)
             }
             radius() {
-                
+                // TODO
             }
             depthFirstSearch(start, target) {
                 var startTime = window.performance.now();
@@ -285,6 +285,63 @@
                     this.parent = parent;
                     this.costs = (parent !== null) ? costs(parent.id, vertex) + parent.costs : 0;
                     this.estimatedCosts = heuristic(vertex) + this.costs;
+                }
+            }
+            getPathNeighbours() {         
+                var pathNeighbour = [];
+                var graph = this.graph;
+                
+                for (var n = 0; n < graph.nodeCount; n++) {
+                    pathNeighbour[n] = [];
+                }
+    
+                for (var i = 0; i < graph.nodeCount; i++) {
+                    var explored = [];
+                    var layer = [i];
+                    var nextLayer = [];
+    
+                    explored[i] = true;
+                    
+                    while(layer.length > 0) {
+                        nextLayer = getNextLayer(layer);
+                        nextLayer.forEach(vertex => {                        
+                            pathNeighbour[vertex][i] = getClosestTo(vertex, layer);
+                        });
+                        layer = nextLayer;
+                    }
+                }
+
+                return pathNeighbour;
+                
+                function getClosestTo(vertex, candidates) {
+                    var neighbours = graph.getNeighbours(vertex);
+                    var min = Infinity;
+                    var closest = -1;
+    
+                    candidates.forEach(candidate => {
+                        if (neighbours.includes(candidate)) {
+                            var weight = graph.getEdgeWeight(vertex, candidate)
+                            if (weight < min) {
+                                min = weight;
+                                closest = candidate;
+                            }
+                        }  
+                    })
+    
+                    return closest;
+                }
+    
+                function getNextLayer(layer) {
+                    var nextLayer = [];
+                    layer.forEach(function(vertex) {
+                        graph.getNeighbours(vertex).forEach(function(neighbour) {
+                            if (!explored[neighbour]) {
+                                nextLayer.push(neighbour);
+                                explored[neighbour] = true;
+                            }
+                        })  
+                    })
+                    return nextLayer;
                 }
             }
         }
