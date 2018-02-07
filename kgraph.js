@@ -291,9 +291,10 @@
                 /**
                  * Returns a matrix M of closest neighbours on a path from 
                  * Node a to Node b.
+                 * 
                  * M[a][b] returns the closest neighbour of a on the path to b.
                  * The returned neighbour is the node index in the source graph.
-                 *  */        
+                 */        
                 var pathNeighbour = [];
                 var graph = this.graph;
                 
@@ -350,9 +351,43 @@
                     return nextLayer;
                 }
             }
+            getDistanceMatrix() {
+                /**
+                 * Returns a matrix M of distances between two Nodes a and b,
+                 * based on the Floyd-Warshall Algorithm.
+                 * 
+                 * M[a][b] returns the distance between a and b. The distance
+                 * is the length of the shortest path between a and b.
+                 */
+
+                var graph = this.graph;
+
+                var distances = new Array(graph.nodeCount);
+                for (var i = 0; i < graph.nodeCount; i++) {
+                    var neighbours = graph.getNeighbours(i);
+                    distances[i] = new Array(graph.nodeCount).fill(Infinity);
+                    distances[i][i] = 0;
+                    // TODO: Add adjacency matrix to graph.
+                    neighbours.forEach(neighbour => {
+                        distances[i][neighbour] = graph.getEdgeWeight(i, neighbour);
+                    })                        
+                }
+                
+                for (var n = 0; n < graph.nodeCount; n++) {
+                    for (var i = 0; i < graph.nodeCount; i++) {
+                        for (var j = 0; j < graph.nodeCount; j++) {
+                            var directPath = distances[i][j];
+                            var indirectPath = distances[i][n] + distances[n][j];
+                            if (directPath > indirectPath)
+                                distances[i][j] = indirectPath;
+                        }
+                    }
+                }
+
+                return distances;
+            }
         }
-
-
+        
         GraphSearcher.prototype.dfs = GraphSearcher.prototype.depthFirstSearch;
         GraphSearcher.prototype.bfs = GraphSearcher.prototype.breadthFirstSearch;
 
