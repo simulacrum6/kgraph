@@ -287,7 +287,13 @@
                     this.estimatedCosts = heuristic(vertex) + this.costs;
                 }
             }
-            getPathNeighbours() {         
+            getPathNeighbours() { 
+                /**
+                 * Returns a matrix M of closest neighbours on a path from 
+                 * Node a to Node b.
+                 * M[a][b] returns the closest neighbour of a on the path to b.
+                 * The returned neighbour is the node index in the source graph.
+                 *  */        
                 var pathNeighbour = [];
                 var graph = this.graph;
                 
@@ -345,6 +351,7 @@
                 }
             }
         }
+
 
         GraphSearcher.prototype.dfs = GraphSearcher.prototype.depthFirstSearch;
         GraphSearcher.prototype.bfs = GraphSearcher.prototype.breadthFirstSearch;
