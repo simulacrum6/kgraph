@@ -109,7 +109,7 @@
             }
             averageDegree() {
                 // TODO: Fix for directed graphs.
-                return 2*this.edgeCount/this.nodeCount;
+                return 2 * this.edgeCount / this.nodeCount;
             }
             isIsolated(id) {
                 return this.degree(id) === 0;
@@ -179,9 +179,9 @@
             }
             pathLengths() {
                 var lengths = []
-                for (let i = 0; i < this.graph.edgeCount; i++){
+                for (let i = 0; i < this.graph.edgeCount; i++) {
                     for (let j = 0; j < this.graph.edgeCount; j++) {
-                        var path = this.bfs(i,j)
+                        var path = this.bfs(i, j)
                         lengths.push(path.length)
                     }
                 }
@@ -189,7 +189,7 @@
             }
             diameter() {
                 var lengths = this.pathLengths()
-                return lengths.reduce((a,b) => Math.max(a,b), 0)
+                return lengths.reduce((a, b) => Math.max(a, b), 0)
             }
             radius() {
                 // TODO
@@ -217,7 +217,7 @@
             breadthFirstSearch(start, target) {
                 if (start === target)
                     return [start]
-                
+
                 var explored = {};
                 var queue = [new SimpleSearchNode(start, null)];
                 while (queue.length > 0) {
@@ -296,31 +296,31 @@
                     this.estimatedCosts = heuristic(vertex) + this.costs;
                 }
             }
-            getPathNeighbours() { 
+            getPathNeighbours() {
                 /**
                  * Returns a matrix M of closest neighbours on a path from 
                  * Node a to Node b.
                  * 
                  * M[a][b] returns the closest neighbour of a on the path to b.
                  * The returned neighbour is the node index in the source graph.
-                 */        
+                 */
                 var pathNeighbour = [];
                 var graph = this.graph;
-                
+
                 for (var n = 0; n < graph.nodeCount; n++) {
                     pathNeighbour[n] = [];
                 }
-    
+
                 for (var i = 0; i < graph.nodeCount; i++) {
                     var explored = [];
                     var layer = [i];
                     var nextLayer = [];
-    
+
                     explored[i] = true;
-                    
-                    while(layer.length > 0) {
+
+                    while (layer.length > 0) {
                         nextLayer = getNextLayer(layer);
-                        nextLayer.forEach(vertex => {                        
+                        nextLayer.forEach(vertex => {
                             pathNeighbour[vertex][i] = getClosestTo(vertex, layer);
                         });
                         layer = nextLayer;
@@ -328,12 +328,12 @@
                 }
 
                 return pathNeighbour;
-                
+
                 function getClosestTo(vertex, candidates) {
                     var neighbours = graph.getNeighbours(vertex);
                     var min = Infinity;
                     var closest = -1;
-    
+
                     candidates.forEach(candidate => {
                         if (neighbours.includes(candidate)) {
                             var weight = graph.getEdgeWeight(vertex, candidate)
@@ -341,21 +341,21 @@
                                 min = weight;
                                 closest = candidate;
                             }
-                        }  
+                        }
                     })
-    
+
                     return closest;
                 }
-    
+
                 function getNextLayer(layer) {
                     var nextLayer = [];
-                    layer.forEach(function(vertex) {
-                        graph.getNeighbours(vertex).forEach(function(neighbour) {
+                    layer.forEach(function (vertex) {
+                        graph.getNeighbours(vertex).forEach(function (neighbour) {
                             if (!explored[neighbour]) {
                                 nextLayer.push(neighbour);
                                 explored[neighbour] = true;
                             }
-                        })  
+                        })
                     })
                     return nextLayer;
                 }
@@ -379,9 +379,9 @@
                     // TODO: Add adjacency matrix to graph.
                     neighbours.forEach(neighbour => {
                         distances[i][neighbour] = graph.getEdgeWeight(i, neighbour);
-                    })                        
+                    })
                 }
-                
+
                 for (var n = 0; n < graph.nodeCount; n++) {
                     for (var i = 0; i < graph.nodeCount; i++) {
                         for (var j = 0; j < graph.nodeCount; j++) {
@@ -396,7 +396,7 @@
                 return distances;
             }
         }
-        
+
         GraphSearcher.prototype.dfs = GraphSearcher.prototype.depthFirstSearch;
         GraphSearcher.prototype.bfs = GraphSearcher.prototype.breadthFirstSearch;
 
