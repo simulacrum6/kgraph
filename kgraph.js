@@ -36,6 +36,7 @@
                 var graph = new Graph(buildInstruction.nodes);
                 graph.addEdge = buildInstruction.addEdgeFunction;
                 graph.show = buildInstruction.showFunction;
+                graph.centralisation = buildInstruction.centralisationFunction;
                 buildInstruction.edges = buildInstruction.edges || [];
                 buildInstruction.edges.forEach(function (edge) {
                     graph.addEdge(edge.from, edge.to, edge.weight);
@@ -43,29 +44,36 @@
                 return graph;
             }
             createUndirectedGraph(nodes, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(nodes, edges, addUndirectedEdge, showUndirected);
+                var buildInstructions = new GraphBuildInstruction(nodes, edges, addUndirectedEdge, showUndirected, centralisationUndirected);
                 return this.createGraph(buildInstructions);
             }
             createUndirectedWeightedGraph(nodes, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(nodes, edges, addUndirectedEdge, showUndirectedWeighted);
+                var buildInstructions = new GraphBuildInstruction(nodes, edges, addUndirectedEdge, showUndirectedWeighted, centralisationUndirected);
                 return this.createGraph(buildInstructions);
             }
             createDirectedGraph(nodes, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(nodes, edges, addDirectedEdge, showDirected);
+                var buildInstructions = new GraphBuildInstruction(nodes, edges, addDirectedEdge, showDirected, centralisationDirected);
                 return this.createGraph(buildInstructions);
             }
             createDirectedWeightedGraph(nodes, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(nodes, edges, addDirectedEdge, showDirectedWeighted);
+                var buildInstructions = new GraphBuildInstruction(nodes, edges, addDirectedEdge, showDirectedWeighted, centralisationDirected);
                 return this.createGraph(buildInstructions);
             }
         }
 
         class GraphBuildInstruction {
-            constructor(nodes, edges, addEdgeFunction, showFunction) {
+            constructor(
+                nodes, 
+                edges, 
+                addEdgeFunction, 
+                showFunction, 
+                centralisationFunction
+            ) {
                 this.nodes = nodes;
                 this.addEdgeFunction = addEdgeFunction;
                 this.showFunction = showFunction;
                 this.edges = edges;
+                this.centralisationFunction = centralisationFunction;
             }
         }
 
@@ -86,6 +94,7 @@
                 }
                 this.addEdge = function () { };
                 this.show = function () { };
+                this.centralisation = function () { };
             }
 
             addNode(node) {
@@ -113,6 +122,7 @@
             getNeighbours(id) {
                 return this.edgeList[id];
             }
+            // TODO: fix for non-undirected case
             degree(id) {
                 return this.getNeighbours(id).length;
             }
@@ -131,6 +141,9 @@
             }
             getAdjacencyList() {
                 return this.adjacencyList;
+            }
+            getEdgeList() {
+                return this.edges;
             }
         }
 
@@ -152,6 +165,50 @@
             this.edgeCount++;
             this.edges.push(new Edge(from, to, weight))
             this.edges.push(new Edge(to, from, weight))
+        }
+
+        function centralisationUndirected(normalised = true) {
+            var centralisation;
+            var degreeSum = 0;
+            var maxDegree = 0;
+            var maxCentralisation = (this.nodeCount - 1) * (this.nodeCount - 2);
+            
+            // TODO: write function for max/min degree
+            for (var node = 0; node < this.nodeCount; node++) {
+                var degree = this.degree(node)
+                if (degree > maxDegree)
+                    maxDegree = degree;
+                degreeSum += degree;
+            }                
+
+            centralisation = (maxDegree * this.nodeCount) - degreeSum; 
+
+            if (normalised)
+                centralisation /= maxCentralisation;
+                
+            return centralisation;
+        }
+
+        function centralisationDirected(normalised = true) {
+            var centralisation;
+            var degreeSum = 0;
+            var maxDegree = 0;
+            var maxCentralisation = (this.nodeCount - 1) * 2 * (this.nodeCount - 2);
+            
+            // TODO: write function for max/min degree
+            for (var node = 0; node < this.nodeCount; node++) {
+                var degree = this.degree(node)
+                if (degree > maxDegree)
+                    maxDegree = degree;
+                degreeSum += degree;
+            }                
+
+            centralisation = (maxDegree * this.nodeCount) - degreeSum; 
+
+            if (normalised)
+                centralisation /= maxCentralisation;
+                
+            return centralisation;
         }
 
         function showDirected() {
@@ -326,7 +383,7 @@
                         if (pathDistance[start][target] != Infinity && start !== target) {
                             var neighbours = graph.getNeighbours(start);
 
-                            var closest = -1;
+                            var closest = null;
                             var min = Infinity;
 
                             neighbours.forEach(neighbour => {
@@ -351,7 +408,6 @@
                  * M[a][b] returns the distance between a and b. The distance
                  * is the length of the shortest path between a and b.
                  */
-
                 var graph = this.graph;
 
                 var distances = graph.getAdjacencyList();
