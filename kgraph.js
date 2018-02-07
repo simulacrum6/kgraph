@@ -77,9 +77,12 @@
                 this.edgeCount = 0;
                 this.edgeList = [];
                 this.edgeWeights = [];
+                this.adjacencyList = [];
                 for (var i = 0; i < this.nodeCount; i++) {
                     this.edgeList[i] = [];
                     this.edgeWeights[i] = [];
+                    this.adjacencyList[i] = new Array(this.nodeCount).fill(Infinity);
+                    this.adjacencyList[i][i] = 0;
                 }
                 this.addEdge = function () { };
                 this.show = function () { };
@@ -102,14 +105,14 @@
                 return this.edgeList[id];
             }
             degree(id) {
-                return this.getNeighbours(id).length
+                return this.getNeighbours(id).length;
             }
             averageDegree() {
-                // See 'Graph Theory' - Chapter 1 by Reinhard Diestel. http://diestel-graph-theory.com/ 
-                return 2*this.edgeCount/this.nodeCount
+                // TODO: Fix for directed graphs.
+                return 2*this.edgeCount/this.nodeCount;
             }
             isIsolated(id) {
-                return this.degree(id) === 0
+                return this.degree(id) === 0;
             }
             getEdgeWeight(from, to) {
                 if (from == to)
@@ -117,20 +120,26 @@
                 var index = this.edgeList[from].indexOf(to);
                 return this.edgeWeights[from][index];
             }
+            getAdjacencyList() {
+                return this.adjacencyList;
+            }
         }
 
         // Graph addEdge & show functions
         function addDirectedEdge(from, to, weight = 1) {
             this.edgeList[from].push(to);
             this.edgeWeights[from].push(weight);
+            this.adjacencyList[from][to] = weight;
             this.edgeCount++;
             this.edges.push(new Edge(from, to, weight))
         }
         function addUndirectedEdge(from, to, weight = 1) {
             this.edgeList[from].push(to);
-            this.edgeWeights[from].push(weight);
             this.edgeList[to].push(from);
+            this.edgeWeights[from].push(weight);
             this.edgeWeights[to].push(weight);
+            this.adjacencyList[from][to] = weight;
+            this.adjacencyList[to][from] = weight;
             this.edgeCount++;
             this.edges.push(new Edge(from, to, weight))
             this.edges.push(new Edge(to, from, weight))
