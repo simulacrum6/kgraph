@@ -88,6 +88,15 @@
                 this.show = function () { };
             }
 
+            addNode(node) {
+                this.nodes.push(node);
+                this.nodeCount++;
+                this.edgeList.push([]);
+                this.edgeWeights.push([]);
+                this.adjacencyList.forEach(row => row.push(0));
+                this.adjacencyList.push(new Array(this.nodeCount).fill(Infinity));
+                this.adjacencyList[this.nodeCount - 1][this.nodeCount - 1] = 0;
+            }
             contains(id) {
                 if (typeof id === 'number')
                     return this.nodes[id] ? true : false;
