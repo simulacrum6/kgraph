@@ -313,61 +313,35 @@
                  * M[a][b] returns the closest neighbour of a on the path to b.
                  * The returned neighbour is the node index in the source graph.
                  */
-                var pathNeighbour = [];
                 var graph = this.graph;
+                var pathDistance = this.getDistanceMatrix();
 
+                var pathNeighbour = new Array(graph.nodeCount);
                 for (var n = 0; n < graph.nodeCount; n++) {
-                    pathNeighbour[n] = [];
+                    pathNeighbour[n] = new Array(graph.nodeCount).fill(null);
                 }
 
-                for (var i = 0; i < graph.nodeCount; i++) {
-                    var explored = [];
-                    var layer = [i];
-                    var nextLayer = [];
+                for (var start = 0; start < graph.nodeCount; start++) {
+                    for (var target = 0; target < graph.nodeCount; target++) {
+                        if (pathDistance[start][target] != Infinity && start !== target) {
+                            var neighbours = graph.getNeighbours(start);
 
-                    explored[i] = true;
+                            var closest = -1;
+                            var min = Infinity;
 
-                    while (layer.length > 0) {
-                        nextLayer = getNextLayer(layer);
-                        nextLayer.forEach(vertex => {
-                            pathNeighbour[vertex][i] = getClosestTo(vertex, layer);
-                        });
-                        layer = nextLayer;
+                            neighbours.forEach(neighbour => {
+                                if (pathDistance[neighbour][target] < min){
+                                    min = pathDistance[neighbour][target];
+                                    closest = neighbour;
+                                }
+                            })
+
+                            pathNeighbour[start][target] = closest;
+                        }
                     }
                 }
 
                 return pathNeighbour;
-
-                function getClosestTo(vertex, candidates) {
-                    var neighbours = graph.getNeighbours(vertex);
-                    var min = Infinity;
-                    var closest = -1;
-
-                    candidates.forEach(candidate => {
-                        if (neighbours.includes(candidate)) {
-                            var weight = graph.getEdgeWeight(vertex, candidate)
-                            if (weight < min) {
-                                min = weight;
-                                closest = candidate;
-                            }
-                        }
-                    })
-
-                    return closest;
-                }
-
-                function getNextLayer(layer) {
-                    var nextLayer = [];
-                    layer.forEach(function (vertex) {
-                        graph.getNeighbours(vertex).forEach(function (neighbour) {
-                            if (!explored[neighbour]) {
-                                nextLayer.push(neighbour);
-                                explored[neighbour] = true;
-                            }
-                        })
-                    })
-                    return nextLayer;
-                }
             }
             getDistanceMatrix() {
                 /**
@@ -380,16 +354,7 @@
 
                 var graph = this.graph;
 
-                var distances = new Array(graph.nodeCount);
-                for (var i = 0; i < graph.nodeCount; i++) {
-                    var neighbours = graph.getNeighbours(i);
-                    distances[i] = new Array(graph.nodeCount).fill(Infinity);
-                    distances[i][i] = 0;
-                    // TODO: Add adjacency matrix to graph.
-                    neighbours.forEach(neighbour => {
-                        distances[i][neighbour] = graph.getEdgeWeight(i, neighbour);
-                    })
-                }
+                var distances = graph.getAdjacencyList();
 
                 for (var n = 0; n < graph.nodeCount; n++) {
                     for (var i = 0; i < graph.nodeCount; i++) {
