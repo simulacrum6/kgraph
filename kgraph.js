@@ -68,25 +68,20 @@
 
         class Graph {
             constructor(nodes) {
-                this.nodes = nodes;
+                this.nodes = [];
                 this.edges = [];
                 this.edgeCount = 0;
                 this.neighbours = [];
                 this.edgeWeights = [];
                 this.adjacencyMatrix = [];
-                for (var i = 0; i < nodes.length; i++) {
-                    this.neighbours[i] = [];
-                    this.edgeWeights[i] = [];
-                    this.adjacencyMatrix[i] = new Array(this.size()).fill(Infinity);
-                    this.adjacencyMatrix[i][i] = 0;
-                }
+                nodes.forEach(node => this.addNode(node));
             }
 
             addNode(object) {
                 this.nodes.push(object);
                 this.neighbours.push([]);
                 this.edgeWeights.push([]);
-                this.adjacencyMatrix.forEach(row => row.push(0));
+                this.adjacencyMatrix.forEach(row => row.push(Infinity));
                 this.adjacencyMatrix.push(new Array(this.size()).fill(Infinity));
                 this.adjacencyMatrix[this.size() - 1][this.size() - 1] = 0;
             }
