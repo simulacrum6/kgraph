@@ -69,36 +69,37 @@
         class Graph {
             constructor(nodes) {
                 this.nodes = nodes;
-                this.edges = []
-                this.nodeCount = nodes.length
+                this.edges = [];
                 this.edgeCount = 0;
-                this.edgeList = [];
+                this.neighbours = [];
                 this.edgeWeights = [];
-                this.adjacencyList = [];
-                for (var i = 0; i < this.nodeCount; i++) {
-                    this.edgeList[i] = [];
+                this.adjacencyMatrix = [];
+                for (var i = 0; i < nodes.length; i++) {
+                    this.neighbours[i] = [];
                     this.edgeWeights[i] = [];
-                    this.adjacencyList[i] = new Array(this.nodeCount).fill(Infinity);
-                    this.adjacencyList[i][i] = 0;
+                    this.adjacencyMatrix[i] = new Array(this.size()).fill(Infinity);
+                    this.adjacencyMatrix[i][i] = 0;
                 }
             }
 
-            addNode(node) {
-                this.nodes.push(node);
-                this.nodeCount++;
-                this.edgeList.push([]);
+            addNode(object) {
+                this.nodes.push(object);
+                this.neighbours.push([]);
                 this.edgeWeights.push([]);
-                this.adjacencyList.forEach(row => row.push(0));
-                this.adjacencyList.push(new Array(this.nodeCount).fill(Infinity));
-                this.adjacencyList[this.nodeCount - 1][this.nodeCount - 1] = 0;
+                this.adjacencyMatrix.forEach(row => row.push(0));
+                this.adjacencyMatrix.push(new Array(this.size()).fill(Infinity));
+                this.adjacencyMatrix[this.size() - 1][this.size() - 1] = 0;
+            }
+            size() {
+                return this.nodes.length;
             }
             averageDegree() {
                 var degreeSum = 0;
     
-                for (var node = 0; node < this.nodeCount; node++)
+                for (var node = 0; node < this.size(); node++)
                     degreeSum += this.degree(node);
 
-                return degreeSum / this.nodeCount;
+                return degreeSum / this.size();
             }
             contains(id) {
                 if (typeof id === 'number')
@@ -110,25 +111,25 @@
             containsAll(ids) {
                 return ids.every(id => this.contains(id));
             }
-            getVertex(id) {
+            getNode(id) {
                 return this.nodes[id];
             }
             getNeighbours(id) {
-                return this.edgeList[id];
+                return this.neighbours[id];
             }
             neighbourOf(node, neighbour) {
                 if (node === neighbour)
                     return false;
-                return this.adjacencyList[node][neighbour] < Infinity;
+                return this.adjacencyMatrix[node][neighbour] < Infinity;
             }
             isIsolated(id) {
                 return this.degree(id) === 0;
             }
             getEdgeWeight(from, to) {
-                return this.adjacencyList[from][to];
+                return this.adjacencyMatrix[from][to];
             }
             getAdjacencyList() {
-                return this.adjacencyList;
+                return this.adjacencyMatrix;
             }
             getNodes() {
                 return this.nodes;
@@ -137,9 +138,9 @@
                 return this.edges;
             }
             _addEdge(from, to, weight, undirected) {
-                this.edgeList[from].push(to);
+                this.neighbours[from].push(to);
                 this.edgeWeights[from].push(weight);
-                this.adjacencyList[from][to] = weight;
+                this.adjacencyMatrix[from][to] = weight;
                 this.edgeCount++;
                 this.edges.push(new Edge(from, to, weight))
                 if (undirected) {
@@ -162,20 +163,20 @@
                 var degreeSum = 0;
                 var maxDegree = 0;
                 // FIXME: Not true for weighted graphs.
-                var maxCentralisation = (this.nodeCount - 1) * (this.nodeCount - 2);
+                var maxCentralisation = (this.size() - 1) * (this.size() - 2);
                 if (directed) {
                     maxCentralisation *= 2;
                 }
 
                 // TODO: write function for max/min degree
-                for (var node = 0; node < this.nodeCount; node++) {
+                for (var node = 0; node < this.size(); node++) {
                     var degree = this.degree(node)
                     if (degree > maxDegree)
                         maxDegree = degree;
                     degreeSum += degree;
                 }
 
-                centralisation = (maxDegree * this.nodeCount) - degreeSum;
+                centralisation = (maxDegree * this.size()) - degreeSum;
 
                 if (normalised)
                     centralisation /= maxCentralisation;
@@ -195,8 +196,8 @@
                 return degree;
             }
             _show(directed, weighted) {
-                for (var node = 0; node < this.nodeCount; node++) {
-                    for (var neighbour = 0; neighbour < this.nodeCount; neighbour++) {
+                for (var node = 0; node < this.size(); node++) {
+                    for (var neighbour = 0; neighbour < this.size(); neighbour++) {
                         var weight = this.getEdgeWeight(node, neighbour);
                         if (0 < weight && weight < Infinity)
                             console.log(showString(node, weight.toFixed(2), neighbour, directed, weighted));
@@ -310,6 +311,8 @@
         class GraphSearcher {
             constructor(graph) {
                 this.graph = graph;
+                this.distanceMatrix;
+                this.pathNeighbour;
             }
             distance(start, target) {
                 var path = this.bfs(start, target)
@@ -389,10 +392,10 @@
             aStarSearch(start, target, heuristicFunction, costFunction) {
                 var startTime = window.performance.now();
                 var heuristic = function (vertex) {
-                    return heuristicFunction(graph.getVertex(vertex), graph.getVertex(target));
+                    return heuristicFunction(graph.getNode(vertex), graph.getNode(target));
                 };
                 var costs = function (vertex, anotherVertex) {
-                    return costFunction(graph.getVertex(vertex), graph.getVertex(anotherVertex));
+                    return costFunction(graph.getNode(vertex), graph.getNode(anotherVertex));
                 };
                 var frontier = new PriorityQueue();
                 var explored = {};
@@ -447,13 +450,13 @@
                 var graph = this.graph;
                 var pathDistance = this.getDistanceMatrix();
 
-                var pathNeighbour = new Array(graph.nodeCount);
-                for (var n = 0; n < graph.nodeCount; n++) {
-                    pathNeighbour[n] = new Array(graph.nodeCount).fill(null);
+                var pathNeighbour = new Array(graph.size());
+                for (var n = 0; n < graph.size(); n++) {
+                    pathNeighbour[n] = new Array(graph.size()).fill(null);
                 }
 
-                for (var start = 0; start < graph.nodeCount; start++) {
-                    for (var target = 0; target < graph.nodeCount; target++) {
+                for (var start = 0; start < graph.size(); start++) {
+                    for (var target = 0; target < graph.size(); target++) {
                         if (pathDistance[start][target] != Infinity && start !== target) {
                             var neighbours = graph.getNeighbours(start);
 
@@ -471,7 +474,7 @@
                         }
                     }
                 }
-
+                this.pathNeighbour = pathNeighbour;
                 return pathNeighbour;
             }
             getDistanceMatrix() {
@@ -486,9 +489,9 @@
 
                 var distances = graph.getAdjacencyList();
 
-                for (var n = 0; n < graph.nodeCount; n++) {
-                    for (var i = 0; i < graph.nodeCount; i++) {
-                        for (var j = 0; j < graph.nodeCount; j++) {
+                for (var n = 0; n < graph.size(); n++) {
+                    for (var i = 0; i < graph.size(); i++) {
+                        for (var j = 0; j < graph.size(); j++) {
                             var directPath = distances[i][j];
                             var indirectPath = distances[i][n] + distances[n][j];
                             if (directPath > indirectPath)
@@ -496,7 +499,7 @@
                         }
                     }
                 }
-
+                this.distanceMatrix = distances;
                 return distances;
             }
         }
