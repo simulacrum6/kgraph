@@ -71,27 +71,58 @@
                 this.nodes = nodes;
                 this.edges = [];
                 this.edgeCount = 0;
-                this.neighbours = [];
+                this.neighbourList = [];
                 this.edgeWeights = [];
                 this.adjacencyMatrix = [];
                 for (var i = 0; i < nodes.length; i++) {
-                    this.neighbours.push([]);
+                    this.neighbourList.push([]);
                     this.edgeWeights.push(new Array(nodes.length).fill(Infinity));
                     this.edgeWeights[i][i] = 0;
                     this.adjacencyMatrix.push(new Array(nodes.length).fill(0));
                 }
             }
-
+            
+            size() {
+                return this.nodes.length;
+            }
+            getNodes() {
+                return this.nodes;
+            }
+            getEdges() {
+                return this.edges;
+            }
+            getAdjacencyMatrix() {
+                return this.adjacencyMatrix;
+            }
+            getWeightMatrix() {
+                return this.edgeWeights;
+            }
             addNode(object) {
                 this.nodes.push(object);
-                this.neighbours.push([]);
+                this.neighbourList.push([]);
                 this.edgeWeights.push(new Array(this.size()).fill(Infinity));
                 this.edgeWeights[this.size() - 1][this.size() - 1] = 0;
                 this.adjacencyMatrix.forEach(row => row.push(0));
                 this.adjacencyMatrix.push(new Array(this.size()).fill(0));
             }
-            size() {
-                return this.nodes.length;
+            get(node) {
+                return this.nodes[node];
+            }
+            getNeighbours(node) {
+                return this.neighbourList[node];
+            }
+            // FIXME: Not true for directed graphs.
+            getDegreeCentrality(node) {
+                return this.degree(node) / this.size() - 1;
+            }
+            getEdgeWeight(node, neighbour) {
+                return this.edgeWeights[node][neighbour];
+            }
+            isIsolated(node) {
+                return this.degree(node) === 0;
+            }
+            isAdjacent(node, neighbour) {
+                return this.adjacencyMatrix[node][neighbour] === 1;
             }
             degrees() {
                 var degrees = [];
@@ -113,10 +144,6 @@
             averageDegree() {
                 return this.degreeSum() / (this.size() -1);
             }
-            // FIXME: Not true for directed graphs.
-            degreeCentrality(node) {
-                return this.degree(node) / this.size() - 1;
-            }
             contains(node) {
                 if (node instanceof Array)
                     return this.containsAll(node);
@@ -129,35 +156,8 @@
             containsAll(nodes) {
                 return nodes.every(node => this.contains(node));
             }
-            getNode(id) {
-                return this.nodes[id];
-            }
-            getNeighbours(id) {
-                return this.neighbours[id];
-            }
-            areAdjacent(node, neighbour) {
-                return this.adjacencyMatrix[node][neighbour] === 1;
-            }
-            isIsolated(id) {
-                return this.degree(id) === 0;
-            }
-            getEdgeWeight(from, to) {
-                return this.edgeWeights[from][to];
-            }
-            getAdjacencyMatrix() {
-                return this.adjacencyMatrix;
-            }
-            getNodes() {
-                return this.nodes;
-            }
-            getEdgeList() {
-                return this.edges;
-            }
-            getWeightMatrix() {
-                return this.edgeWeights;
-            }
             _addEdge(from, to, weight, undirected) {
-                this.neighbours[from].push(to);
+                this.neighbourList[from].push(to);
                 this.adjacencyMatrix[from][to] = 1;
                 this.edgeWeights[from][to] = weight;
                 this.edgeCount++;
@@ -195,7 +195,7 @@
 
                 if (directed) {
                     neighbours.forEach(neighbour => {
-                        if (this.areAdjacent(neighbour, node))
+                        if (this.isAdjacent(neighbour, node))
                             degree++;
                     })
                 }
@@ -398,10 +398,10 @@
             aStarSearch(start, target, heuristicFunction, costFunction) {
                 var startTime = window.performance.now();
                 var heuristic = function (vertex) {
-                    return heuristicFunction(graph.getNode(vertex), graph.getNode(target));
+                    return heuristicFunction(graph.get(vertex), graph.get(target));
                 };
                 var costs = function (vertex, anotherVertex) {
-                    return costFunction(graph.getNode(vertex), graph.getNode(anotherVertex));
+                    return costFunction(graph.get(vertex), graph.get(anotherVertex));
                 };
                 var frontier = new PriorityQueue();
                 var explored = {};
