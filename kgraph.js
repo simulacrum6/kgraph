@@ -92,6 +92,15 @@
                 this.adjacencyList.push(new Array(this.nodeCount).fill(Infinity));
                 this.adjacencyList[this.nodeCount - 1][this.nodeCount - 1] = 0;
             }
+            averageDegree() {
+                var degreeSum = 0;
+                var normalisationFactor = (this.nodeCount - 1);
+
+                for (var node = 0; node < this.nodeCount; node++)
+                    degreeSum += this.degree(node);
+
+                return degreeSum/normalisationFactor;
+            }
             contains(id) {
                 if (typeof id === 'number')
                     return this.nodes[id] ? true : false;
@@ -108,13 +117,10 @@
             getNeighbours(id) {
                 return this.edgeList[id];
             }
-            degree(id) {
-                // FIXME: Not accurate for directed graphs.
-                return this.getNeighbours(id).length;
-            }
-            averageDegree() {
-                // FIXME: Not accurate for directed graphs.
-                return 2 * this.edgeCount / this.nodeCount;
+            neighbourOf(node, neighbour) {
+                if (node === neighbour)
+                    return false;
+                return this.adjacencyList[node][neighbour] < Infinity;
             }
             isIsolated(id) {
                 return this.degree(id) === 0;
@@ -177,6 +183,18 @@
 
                 return centralisation;
             }
+            _degree(id, directed) {
+                var neighbours = this.getNeighbours(id);
+                var degree = neighbours.length;
+
+                if (directed) {
+                    neighbours.forEach(neighbour => {
+                        if (this.neighbourOf(neighbour, node))
+                            degree++;
+                    })
+                }
+                return degree;
+            }
             _show(directed, weighted) {
                 for (var node = 0; node < this.nodeCount; node++) {
                     for (var neighbour = 0; neighbour < this.nodeCount; neighbour++) {
@@ -211,6 +229,9 @@
             centralisation(normalised = true) {
                 return this._centralisation(normalised, false);
             }
+            degree(node) {
+                return this._degree(node, false);
+            }
             show() {
                 this._show(false, false);
             }
@@ -229,6 +250,9 @@
             }
             centralisation(normalised = true) {
                 return this._centralisation(normalised, false);
+            }
+            degree(node) {
+                return this._degree(node, true);
             }
             show() {
                 return this._show(true, false);
@@ -249,6 +273,9 @@
             centralisation(normalised = true) {
                 return this._centralisation(normalised, false);
             }
+            degree(node) {
+                return this._degree(node, false);
+            }
             show() {
                 return this._show(false, true);
             }
@@ -267,6 +294,9 @@
             }
             centralisation(normalised = true) {
                 return this._centralisation(normalised, true);
+            }
+            degree(node) {
+                return this._degree(node, true);
             }
             show() {
                 return this._show(true, true);
