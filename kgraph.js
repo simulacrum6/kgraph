@@ -94,12 +94,11 @@
             }
             averageDegree() {
                 var degreeSum = 0;
-                var normalisationFactor = (this.nodeCount - 1);
-
+    
                 for (var node = 0; node < this.nodeCount; node++)
                     degreeSum += this.degree(node);
 
-                return degreeSum/normalisationFactor;
+                return degreeSum / this.nodeCount;
             }
             contains(id) {
                 if (typeof id === 'number')
