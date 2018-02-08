@@ -93,23 +93,41 @@
             size() {
                 return this.nodes.length;
             }
-            averageDegree() {
-                var degreeSum = 0;
-    
-                for (var node = 0; node < this.size(); node++)
-                    degreeSum += this.degree(node);
+            degrees() {
+                var degrees = [];
 
-                return degreeSum / this.size();
+                for (var node = 0; node < this.size(); node++)
+                    degrees.push(this.degree(node));
+
+                return degrees;
             }
-            contains(id) {
-                if (typeof id === 'number')
-                    return this.nodes[id] ? true : false;
-                if (id instanceof Array)
-                    return this.containsAll(id);
+            maxDegree() {
+                return this.degrees().reduce((max,value) => Math.max(max,value), -1)
+            }
+            minDegree() {
+                return this.degrees().reduce((min,value) => Math.min(min,value), Infinity)
+            }
+            degreeSum() {
+                return this.degrees().reduce((sum,value) => sum + value, 0);
+            }
+            averageDegree() {
+                return this.degreeSum() / (this.size() -1);
+            }
+            // FIXME: Not true for directed graphs.
+            degreeCentrality(node) {
+                return this.degree(node) / this.size() - 1;
+            }
+            contains(node) {
+                if (node instanceof Array)
+                    return this.containsAll(node);
+                if (typeof node === 'number')
+                    return this.nodes[node] ? true : false;
+                if (typeof node === 'object')
+                    return this.nodes.includes(node);
                 return false;
             }
-            containsAll(ids) {
-                return ids.every(id => this.contains(id));
+            containsAll(nodes) {
+                return nodes.every(node => this.contains(node));
             }
             getNode(id) {
                 return this.nodes[id];
@@ -160,27 +178,14 @@
                  * centrality is high.
                  * 
                  */
-                var centralisation;
-                var degreeSum = 0;
-                var maxDegree = 0;
-                // FIXME: Not true for weighted graphs.
-                var maxCentralisation = (this.size() - 1) * (this.size() - 2);
-                if (directed) {
-                    maxCentralisation *= 2;
+                var centralisation = this.maxDegree() * this.size() - this.degreeSum();
+
+                if (normalised) {
+                    var normalisation = directed ? 
+                        (this.size() - 1) * (this.size() - 2) * 2:
+                        (this.size() - 1) * (this.size() - 2);
+                    centralisation /= normalisation;
                 }
-
-                // TODO: write function for max/min degree
-                for (var node = 0; node < this.size(); node++) {
-                    var degree = this.degree(node)
-                    if (degree > maxDegree)
-                        maxDegree = degree;
-                    degreeSum += degree;
-                }
-
-                centralisation = (maxDegree * this.size()) - degreeSum;
-
-                if (normalised)
-                    centralisation /= maxCentralisation;
 
                 return centralisation;
             }
@@ -504,7 +509,7 @@
                 return distances;
             }
         }
-
+        
         GraphSearcher.prototype.dfs = GraphSearcher.prototype.depthFirstSearch;
         GraphSearcher.prototype.bfs = GraphSearcher.prototype.breadthFirstSearch;
 
