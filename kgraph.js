@@ -68,22 +68,27 @@
 
         class Graph {
             constructor(nodes) {
-                this.nodes = [];
+                this.nodes = nodes;
                 this.edges = [];
                 this.edgeCount = 0;
                 this.neighbours = [];
                 this.edgeWeights = [];
                 this.adjacencyMatrix = [];
-                nodes.forEach(node => this.addNode(node));
+                for (var i = 0; i < nodes.length; i++) {
+                    this.neighbours.push([]);
+                    this.edgeWeights.push(new Array(nodes.length).fill(Infinity));
+                    this.edgeWeights[i][i] = 0;
+                    this.adjacencyMatrix.push(new Array(nodes.length).fill(0));
+                }
             }
 
             addNode(object) {
                 this.nodes.push(object);
                 this.neighbours.push([]);
-                this.edgeWeights.push([]);
-                this.adjacencyMatrix.forEach(row => row.push(Infinity));
-                this.adjacencyMatrix.push(new Array(this.size()).fill(Infinity));
-                this.adjacencyMatrix[this.size() - 1][this.size() - 1] = 0;
+                this.edgeWeights.push(new Array(this.size()).fill(Infinity));
+                this.edgeWeights[this.size() - 1][this.size() - 1] = 0;
+                this.adjacencyMatrix.forEach(row => row.push(0));
+                this.adjacencyMatrix.push(new Array(this.size()).fill(0));
             }
             size() {
                 return this.nodes.length;
@@ -112,18 +117,16 @@
             getNeighbours(id) {
                 return this.neighbours[id];
             }
-            neighbourOf(node, neighbour) {
-                if (node === neighbour)
-                    return false;
-                return this.adjacencyMatrix[node][neighbour] < Infinity;
+            areAdjacent(node, neighbour) {
+                return this.adjacencyMatrix[node][neighbour] === 1;
             }
             isIsolated(id) {
                 return this.degree(id) === 0;
             }
             getEdgeWeight(from, to) {
-                return this.adjacencyMatrix[from][to];
+                return this.edgeWeights[from][to];
             }
-            getAdjacencyList() {
+            getAdjacencyMatrix() {
                 return this.adjacencyMatrix;
             }
             getNodes() {
@@ -132,10 +135,13 @@
             getEdgeList() {
                 return this.edges;
             }
+            getWeightMatrix() {
+                return this.edgeWeights;
+            }
             _addEdge(from, to, weight, undirected) {
                 this.neighbours[from].push(to);
-                this.edgeWeights[from].push(weight);
-                this.adjacencyMatrix[from][to] = weight;
+                this.adjacencyMatrix[from][to] = 1;
+                this.edgeWeights[from][to] = weight;
                 this.edgeCount++;
                 this.edges.push(new Edge(from, to, weight))
                 if (undirected) {
@@ -184,7 +190,7 @@
 
                 if (directed) {
                     neighbours.forEach(neighbour => {
-                        if (this.neighbourOf(neighbour, node))
+                        if (this.areAdjacent(neighbour, node))
                             degree++;
                     })
                 }
@@ -482,7 +488,7 @@
                  */
                 var graph = this.graph;
 
-                var distances = graph.getAdjacencyList();
+                var distances = graph.getWeightMatrix();
 
                 for (var n = 0; n < graph.size(); n++) {
                     for (var i = 0; i < graph.size(); i++) {
