@@ -20,6 +20,7 @@
                 this.to = to;
                 this.weight = weight;
             }
+
             toString() {
                 return '{from: ' + this.from + ', to: ' + this.to + ', weight: ' + this.weight.toFixed(2) + '}';
             }
@@ -28,52 +29,40 @@
         return Edge
     })()
 
+    const GraphTypes = {
+        SIMPLE: 1,
+        DIRECTED_SIMPLE: 2,
+        WEIGHTED: 3,
+        DIRECTED_WEIGHTED: 4
+    };
+
     var GraphFactory = (function () {
         class GraphFactory {
             constructor() { }
 
-            createGraph(buildInstruction) {
-                var graph = new Graph(buildInstruction.nodes);
-                graph.addEdge = buildInstruction.addEdgeFunction;
-                graph.show = buildInstruction.showFunction;
-                graph.centralisation = buildInstruction.centralisationFunction;
-                buildInstruction.edges = buildInstruction.edges || [];
-                buildInstruction.edges.forEach(function (edge) {
-                    graph.addEdge(edge.from, edge.to, edge.weight);
-                });
-                return graph;
+            createUndirectedGraph(nodes = [], edges = []) {
+                return this._createGraph(nodes, edges, GraphTypes.SIMPLE);
             }
-            createUndirectedGraph(nodes, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(nodes, edges, addUndirectedEdge, showUndirected, centralisationUndirected);
-                return this.createGraph(buildInstructions);
+            createUndirectedWeightedGraph(nodes = [], edges = []) {
+                return this._createGraph(nodes, edges, GraphTypes.WEIGHTED);
             }
-            createUndirectedWeightedGraph(nodes, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(nodes, edges, addUndirectedEdge, showUndirectedWeighted, centralisationUndirected);
-                return this.createGraph(buildInstructions);
+            createDirectedGraph(nodes = [], edges = []) {
+                return this._createGraph(nodes, edges, GraphTypes.DIRECTED_SIMPLE);
             }
-            createDirectedGraph(nodes, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(nodes, edges, addDirectedEdge, showDirected, centralisationDirected);
-                return this.createGraph(buildInstructions);
+            createDirectedWeightedGraph(nodes = [], edges = []) {
+                return this._createGraph(nodes, edges, GraphTypes.DIRECTED_WEIGHTED);
             }
-            createDirectedWeightedGraph(nodes, edges = []) {
-                var buildInstructions = new GraphBuildInstruction(nodes, edges, addDirectedEdge, showDirectedWeighted, centralisationDirected);
-                return this.createGraph(buildInstructions);
-            }
-        }
-
-        class GraphBuildInstruction {
-            constructor(
-                nodes, 
-                edges, 
-                addEdgeFunction, 
-                showFunction, 
-                centralisationFunction
-            ) {
-                this.nodes = nodes;
-                this.addEdgeFunction = addEdgeFunction;
-                this.showFunction = showFunction;
-                this.edges = edges;
-                this.centralisationFunction = centralisationFunction;
+            _createGraph(nodes, edges, graphType) {
+                switch (graphType) {
+                    case GraphTypes.SIMPLE:
+                        return new SimpleGraph(nodes, edges);
+                    case GraphTypes.DIRECTED_SIMPLE:
+                        return new DirectedSimpleGraph(nodes, edges);
+                    case GraphTypes.WEIGHTED:
+                        return new WeightedGraph(nodes, edges);
+                    case GraphTypes.DIRECTED_WEIGHTED:
+                        return new DirectedWeightedGraph(nodes, edges);
+                }
             }
         }
 
@@ -92,9 +81,6 @@
                     this.adjacencyList[i] = new Array(this.nodeCount).fill(Infinity);
                     this.adjacencyList[i][i] = 0;
                 }
-                this.addEdge = function () { };
-                this.show = function () { };
-                this.centralisation = function () { };
             }
 
             addNode(node) {
@@ -122,110 +108,169 @@
             getNeighbours(id) {
                 return this.edgeList[id];
             }
-            // TODO: fix for non-undirected case
             degree(id) {
+                // FIXME: Not accurate for directed graphs.
                 return this.getNeighbours(id).length;
             }
             averageDegree() {
-                // TODO: Fix for directed graphs.
+                // FIXME: Not accurate for directed graphs.
                 return 2 * this.edgeCount / this.nodeCount;
             }
             isIsolated(id) {
                 return this.degree(id) === 0;
             }
             getEdgeWeight(from, to) {
-                if (from == to)
-                    return 0;
-                var index = this.edgeList[from].indexOf(to);
-                return this.edgeWeights[from][index];
+                return this.adjacencyList[from][to];
             }
             getAdjacencyList() {
                 return this.adjacencyList;
             }
+            getNodes() {
+                return this.nodes;
+            }
             getEdgeList() {
                 return this.edges;
             }
+            _addEdge(from, to, weight, undirected) {
+                this.edgeList[from].push(to);
+                this.edgeWeights[from].push(weight);
+                this.adjacencyList[from][to] = weight;
+                this.edgeCount++;
+                this.edges.push(new Edge(from, to, weight))
+                if (undirected) {
+                    this.edgeCount--;
+                    this._addEdge(to, from, weight, false);
+                }
+            }
+            _centralisation(normalised, directed) {
+                /**
+                 * Returns the centralisation of the graph.
+                 * 
+                 * Centralisation is a network measure, describing how unevenly 
+                 * degrees are distributed between high degree and low degree 
+                 * nodes. A high centralisation (close to 1), indicates that the 
+                 * difference between all nodes and the ones with the highest
+                 * centrality is high.
+                 * 
+                 */
+                var centralisation;
+                var degreeSum = 0;
+                var maxDegree = 0;
+                // FIXME: Not true for weighted graphs.
+                var maxCentralisation = (this.nodeCount - 1) * (this.nodeCount - 2);
+                if (directed) {
+                    maxCentralisation *= 2;
+                }
+
+                // TODO: write function for max/min degree
+                for (var node = 0; node < this.nodeCount; node++) {
+                    var degree = this.degree(node)
+                    if (degree > maxDegree)
+                        maxDegree = degree;
+                    degreeSum += degree;
+                }
+
+                centralisation = (maxDegree * this.nodeCount) - degreeSum;
+
+                if (normalised)
+                    centralisation /= maxCentralisation;
+
+                return centralisation;
+            }
+            _show(directed, weighted) {
+                for (var node = 0; node < this.nodeCount; node++) {
+                    for (var neighbour = 0; neighbour < this.nodeCount; neighbour++) {
+                        var weight = this.getEdgeWeight(node, neighbour);
+                        if (0 < weight && weight < Infinity)
+                            console.log(showString(node, weight.toFixed(2), neighbour, directed, weighted));
+                    }
+                }
+
+                function showString(node, weight, neighbour, directed, weighted) {
+                    var leftArrow = '<'
+                    if (!weighted)
+                        weight = '';
+                    if (directed)
+                        leftArrow = '';
+                    return `${node} ${leftArrow}-${weight}-> ${neighbour}`
+                }
+            }
         }
 
-        // Graph addEdge & show functions
-        function addDirectedEdge(from, to, weight = 1) {
-            this.edgeList[from].push(to);
-            this.edgeWeights[from].push(weight);
-            this.adjacencyList[from][to] = weight;
-            this.edgeCount++;
-            this.edges.push(new Edge(from, to, weight))
-        }
-        function addUndirectedEdge(from, to, weight = 1) {
-            this.edgeList[from].push(to);
-            this.edgeList[to].push(from);
-            this.edgeWeights[from].push(weight);
-            this.edgeWeights[to].push(weight);
-            this.adjacencyList[from][to] = weight;
-            this.adjacencyList[to][from] = weight;
-            this.edgeCount++;
-            this.edges.push(new Edge(from, to, weight))
-            this.edges.push(new Edge(to, from, weight))
-        }
+        class SimpleGraph extends Graph {
+            constructor(nodes = [], edges = []) {
+                super(nodes);
+                edges.forEach(edge => {
+                    this.addEdge(edge.from, edge.to);
+                });
+            }
 
-        function centralisationUndirected(normalised = true) {
-            var centralisation;
-            var degreeSum = 0;
-            var maxDegree = 0;
-            var maxCentralisation = (this.nodeCount - 1) * (this.nodeCount - 2);
-            
-            // TODO: write function for max/min degree
-            for (var node = 0; node < this.nodeCount; node++) {
-                var degree = this.degree(node)
-                if (degree > maxDegree)
-                    maxDegree = degree;
-                degreeSum += degree;
-            }                
-
-            centralisation = (maxDegree * this.nodeCount) - degreeSum; 
-
-            if (normalised)
-                centralisation /= maxCentralisation;
-                
-            return centralisation;
+            addEdge(from, to) {
+                this._addEdge(from, to, 1, true);
+            }
+            centralisation(normalised = true) {
+                return this._centralisation(normalised, false);
+            }
+            show() {
+                this._show(false, false);
+            }
         }
 
-        function centralisationDirected(normalised = true) {
-            var centralisation;
-            var degreeSum = 0;
-            var maxDegree = 0;
-            var maxCentralisation = (this.nodeCount - 1) * 2 * (this.nodeCount - 2);
-            
-            // TODO: write function for max/min degree
-            for (var node = 0; node < this.nodeCount; node++) {
-                var degree = this.degree(node)
-                if (degree > maxDegree)
-                    maxDegree = degree;
-                degreeSum += degree;
-            }                
+        class DirectedSimpleGraph extends Graph {
+            constructor(nodes = [], edges = []) {
+                super(nodes);
+                edges.forEach(edge => {
+                    this.addEdge(edge.from, edge.to);
+                })
+            }
 
-            centralisation = (maxDegree * this.nodeCount) - degreeSum; 
-
-            if (normalised)
-                centralisation /= maxCentralisation;
-                
-            return centralisation;
+            addEdge(from, to) {
+                this._addEdge(from, to, 1, false);
+            }
+            centralisation(normalised = true) {
+                return this._centralisation(normalised, false);
+            }
+            show() {
+                return this._show(true, false);
+            }
         }
 
-        function showDirected() {
-            for (var i = 0; i < this.nodeCount; i++)
-                console.log(i + " -> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
+        class WeightedGraph extends Graph {
+            constructor(nodes = [], edges = []) {
+                super(nodes);
+                edges.forEach(edge => {
+                    this.addEdge(edge.from, edge.to, edge.weight);
+                })
+            }
+
+            addEdge(from, to, weight) {
+                this._addEdge(from, to, weight, true);
+            }
+            centralisation(normalised = true) {
+                return this._centralisation(normalised, false);
+            }
+            show() {
+                return this._show(false, true);
+            }
         }
-        function showDirectedWeighted() {
-            for (var i = 0; i < this.nodeCount; i++)
-                console.log(i + " -" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
-        }
-        function showUndirected() {
-            for (var i = 0; i < this.nodeCount; i++)
-                console.log(i + " <-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
-        }
-        function showUndirectedWeighted() {
-            for (var i = 0; i < this.nodeCount; i++)
-                console.log(i + " <-" + this.edgeWeights[i].map(x => x.toFixed(2)) + "-> " + this.edgeList[i] + " [" + this.edgeList[i].length + "]");
+
+        class DirectedWeightedGraph extends Graph {
+            constructor(nodes = [], edges = []) {
+                super(nodes);
+                edges.forEach(edge => {
+                    this.addEdge(edge.from, edge.to, edge.weight);
+                })
+            }
+
+            addEdge(from, to, weight) {
+                this._addEdge(from, to, weight, false);
+            }
+            centralisation(normalised = true) {
+                return this._centralisation(normalised, true);
+            }
+            show() {
+                return this._show(true, true);
+            }
         }
 
         return GraphFactory
@@ -387,7 +432,7 @@
                             var min = Infinity;
 
                             neighbours.forEach(neighbour => {
-                                if (pathDistance[neighbour][target] < min){
+                                if (pathDistance[neighbour][target] < min) {
                                     min = pathDistance[neighbour][target];
                                     closest = neighbour;
                                 }
