@@ -338,11 +338,21 @@
             }
             eccentricity(node) {
                 var distances = this.distanceMatrix || this.getDistanceMatrix()
-                return distances
+                return distances[node].reduce((max,value) => Math.max(max, value), 0)
+            }
+            eccentricities(nodes) {
+                if (nodes instanceof Array)
+                    return nodes.map(node => this.eccentricity(node), this)
+                if (nodes === undefined) {
+                    nodes = [];
+                    for (var node = 0; node < this.graph.nodeCount; node++)
+                        nodes.push(this.eccentricity(node))
+                    return this.eccentricities(nodes)
+                }
             }
             diameter() {
                 var distances = this.distanceMatrix || this.getDistanceMatrix() 
-                return distances.reduce((max, value) => Math.max(max, value), 0)
+                return distances.reduce((max,value) => Math.max(max, value), 0)
             }
             radius() {
                 var distances = this.distanceMatrix || this.getDistanceMatrix();
@@ -459,7 +469,7 @@
                  * The returned neighbour is the node index in the source graph.
                  */
                 var graph = this.graph;
-                var pathDistance = this.getDistanceMatrix();
+                var pathDistance = this.distanceMatrix || this.getDistanceMatrix();
 
                 var pathNeighbour = new Array(graph.size());
                 for (var n = 0; n < graph.size(); n++) {
