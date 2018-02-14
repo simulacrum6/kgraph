@@ -328,20 +328,25 @@
             }
             pathLengths() {
                 var lengths = []
-                for (let i = 0; i < this.graph.edgeCount; i++) {
-                    for (let j = 0; j < this.graph.edgeCount; j++) {
+                for (let i = 0; i < this.graph.nodeCount; i++) {
+                    for (let j = 0; j < this.graph.nodeCount; j++) {
                         var path = this.bfs(i, j)
                         lengths.push(path.length)
                     }
                 }
                 return lengths
             }
+            eccentricity(node) {
+                var distances = this.distanceMatrix || this.getDistanceMatrix()
+                return distances
+            }
             diameter() {
-                var lengths = this.pathLengths()
-                return lengths.reduce((a, b) => Math.max(a, b), 0)
+                var distances = this.distanceMatrix || this.getDistanceMatrix() 
+                return distances.reduce((max, value) => Math.max(max, value), 0)
             }
             radius() {
-                // TODO
+                var distances = this.distanceMatrix || this.getDistanceMatrix();
+                return distances.reduce((min,value) => Math.min(min, value), Infinity)
             }
             depthFirstSearch(start, target) {
                 var startTime = window.performance.now();
