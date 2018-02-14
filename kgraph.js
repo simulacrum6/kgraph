@@ -118,6 +118,26 @@
             getEdgeWeight(node, neighbour) {
                 return this.edgeWeights[node][neighbour];
             }
+            // FIXME: Only true for simple graphs.
+            localClusteringCoefficient(node) {
+                var neighbours = this.getNeighbours(node);
+                if (neighbours.length < 2)
+                    return 0;
+                var maxNeighbourEdges = neighbours.length * (neighbours.length - 1);
+                var neighbourEdges = 0;
+                for (var i = 0; i < neighbours.length; i++) {
+                    for (var j = 0; j < neighbours.length; j++) {
+                        neighbourEdges += this.adjacencyMatrix[i][j];
+                    }
+                }
+                return neighbourEdges / maxNeighbourEdges;                
+            }
+            isConnected() {
+                for (var node = 0; node < this.size(); node++)
+                    if (this.isIsolated(node))
+                        return false;
+                return true;
+            }
             isIsolated(node) {
                 return this.degree(node) === 0;
             }
@@ -143,6 +163,23 @@
             }
             averageDegree() {
                 return this.degreeSum() / (this.size() -1);
+            }
+            centralisation() {
+                var maxDegree = this.maxDegree();
+                var maxSum = (this.size() - 1) * (this.size() - 2)
+                var sum = 0;
+                for (var node = 0; node < this.size(); node++)
+                    sum += maxDegree - this.degree(node);
+                return sum / maxSum;
+            }
+            // FIXME: Only true for simple graphs
+            globalClusteringCoefficient() {
+                var localSum = 0;
+                for (var node = 0; node < this.size(); node++) {
+                    localSum += this.getLocalClusteringCoefficient(node);
+                    console.log(localSum);
+                }
+                return localSum / this.size();
             }
             contains(node) {
                 if (node instanceof Array)
@@ -328,35 +365,50 @@
             }
             pathLengths() {
                 var lengths = []
-                for (let i = 0; i < this.graph.nodeCount; i++) {
-                    for (let j = 0; j < this.graph.nodeCount; j++) {
+                for (let i = 0; i < this.graph.size(); i++) {
+                    for (let j = 0; j < this.graph.size(); j++) {
                         var path = this.bfs(i, j)
                         lengths.push(path.length)
                     }
                 }
                 return lengths
             }
+            // FIXME: Edge cases when node is isolated.
             eccentricity(node) {
+                if (this.graph.isIsolated(node))
+                    return Infinity;
                 var distances = this.distanceMatrix || this.getDistanceMatrix()
-                return distances[node].reduce((max,value) => Math.max(max, value), 0)
+                return distances[node]
+                    .filter(value => 0 < value && value < Infinity)
+                    .reduce((max,value) => Math.max(max, value), 0)
             }
             eccentricities(nodes) {
-                if (nodes instanceof Array)
-                    return nodes.map(node => this.eccentricity(node), this)
                 if (nodes === undefined) {
                     nodes = [];
-                    for (var node = 0; node < this.graph.nodeCount; node++)
-                        nodes.push(this.eccentricity(node))
+                    for (var node = 0; node < this.graph.size(); node++)
+                        nodes.push(node)
                     return this.eccentricities(nodes)
                 }
+                if (nodes instanceof Array)
+                    return nodes.map(node => this.eccentricity(node), this)
+                console.log('Illegal input passed to Graphsearcher.eccentricities.\n Expected array, got ' + nodes)
+                return []
             }
             diameter() {
-                var distances = this.distanceMatrix || this.getDistanceMatrix() 
-                return distances.reduce((max,value) => Math.max(max, value), 0)
+                var max = 0;
+                for (var node = 0; node < this.graph.size(); node++) {
+                    var eccentricity = this.eccentricity(node);
+                    max =  eccentricity > max ? eccentricity : max;
+                }
+                return max;
             }
             radius() {
-                var distances = this.distanceMatrix || this.getDistanceMatrix();
-                return distances.reduce((min,value) => Math.min(min, value), Infinity)
+                var min = Infinity;
+                for (var node = 0; node < this.graph.size(); node++) {
+                    var eccentricity = this.eccentricity(node);
+                    min =  eccentricity < min ? eccentricity : min;
+                }
+                return min;
             }
             depthFirstSearch(start, target) {
                 var startTime = window.performance.now();
